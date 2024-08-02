@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -8,43 +9,70 @@ using namespace std;
 
 class Matrix {
     public:
-        double* mat;
+        unique_ptr<double[]> mat;
         size_t rows, cols;
     
     Matrix(const size_t rows, const size_t cols) : rows(rows), cols(cols) {
         if (rows <= 0 || 0 >= cols) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
-        mat = new double[rows * cols];
-    }
-
-    Matrix(const py::list& list) {
-        if (list.empty()) {
-            throw std::out_of_range("Matrix cannot be empty!");
-        }
+        mat = make_unique<double[]>(rows * cols);
     }
 
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
-        mat = new double[rows * cols];
+        mat = make_unique<double[]>(rows * cols);
         for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+    }
+
+    Matrix(const py::list &list) {
+        size_t py_rows = list.size();
+        if (list.empty()) {
+            throw std::runtime_error("Matrix must be nonempty");
+        } 
+            
+        size_t py_cols;
+        const auto item = list.attr("__getitem__")(0);
+        if !py::isinstance<py::list>(item) {
+            throw std::runtime_error("Row is not a list");
+        } else {
+            py_cols = item.size();
+        }
+
+        this->rows = py_rows;
+        this->cols = py_cols;
+        this->mat = make_unique<double[]>(rows * cols);
+        // copy first row in
+        for (size_t i = 0; i < py_cols; ++i) {
+            this->mat[i] = item.attr("__getitem__")(i).cast<double>();
+        }
+
+        for (size_t i = 1; i < py_rows; ++i) {
+            const auto item = list.attr("__getitem__")(i);
+            if !py::isinstance<py::list>(item) {
+                throw std::runtime_error("Row is not a list");
+            } else if (item.size() != py_cols) {
+                throw std::runtime_error("Matrix rows have different lengths");
+            } else {
+                // copy values in row by row
+                for (size_t j = 0; j < py_cols; ++j) {
+                    this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
+                }
+            }
+
+        }
     }
 
     // copy assignmnt
     Matrix& operator=(const Matrix& other) {
         if (this != &other) {
-            delete[] this->mat;
             this->rows = other.rows;
             this->cols = other.cols;
-            this->mat = new double[other.rows * other.cols];
+            this->mat = make_unique<double[]>(other.rows * other.cols);
             for (size_t i = 0; i < rows * cols; ++i) this->mat[i] = other.mat[i];
             return *this;
         }
         return *this;
-    }
-
-    ~Matrix() {
-        delete[] mat;
     }
 
     double get_item(size_t r, size_t c) const {
