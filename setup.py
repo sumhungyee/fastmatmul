@@ -1,0 +1,18 @@
+from glob import glob
+from setuptools import setup
+from pybind11.setup_helpers import Pybind11Extension
+
+ext_modules = [
+    Pybind11Extension(
+        "matmul",
+        sorted(glob("src/matmul.cpp")), 
+    ),
+]
+
+setup(
+    name='matmul',
+    version='0.0.1',
+    install_requires=[
+        'requests',
+        'importlib-metadata; python_version<"3.10"',
+    ], ext_modules=ext_modules)
