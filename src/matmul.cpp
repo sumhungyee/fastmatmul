@@ -25,7 +25,7 @@ class Matrix {
         for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
     }
 
-    Matrix(const py::list &list) {
+    Matrix(const py::list& list) {
         size_t py_rows = list.size();
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
@@ -47,7 +47,6 @@ class Matrix {
         for (size_t i = 1; i < py_rows; ++i) {
             const py::list item = list.attr("__getitem__")(i);
             
-
             if (item.size() != py_cols) {
                 throw std::runtime_error("Matrix rows have different lengths");
             }
@@ -56,7 +55,6 @@ class Matrix {
                 this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
             }
           
-
         }
     }
 
@@ -80,6 +78,10 @@ class Matrix {
         return mat[r * cols + c];
     }
 
+    Matrix copy() {
+        return Matrix(*this);
+    }
+
 };
 
 int add(int i, int j) {
@@ -89,4 +91,9 @@ int add(int i, int j) {
 PYBIND11_MODULE(matmul, m) {
     m.doc() = "A fun module I built while learning cpp, wip"; // still in the works
     m.def("add", &add, "A function that adds two numbers");
+    //https://stackoverflow.com/questions/49301317/pybind11-passing-a-python-list-to-c-style-array
+    py::class_<Matrix>(m, "Matrix")
+        .def(py::init<const py::list&>())
+        .def("assign", &Matrix::operator=) //https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assignment-operator
+        .def("copy", &Matrix::copy);
 }
