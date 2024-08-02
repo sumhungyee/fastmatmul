@@ -32,12 +32,9 @@ class Matrix {
         } 
             
         size_t py_cols;
-        const auto item = list.attr("__getitem__")(0);
-        if !py::isinstance<py::list>(item) {
-            throw std::runtime_error("Row is not a list");
-        } else {
-            py_cols = item.size();
-        }
+        const py::list item = list.attr("__getitem__")(0);
+        // assume its a list     
+        py_cols = item.size();
 
         this->rows = py_rows;
         this->cols = py_cols;
@@ -48,17 +45,17 @@ class Matrix {
         }
 
         for (size_t i = 1; i < py_rows; ++i) {
-            const auto item = list.attr("__getitem__")(i);
-            if !py::isinstance<py::list>(item) {
-                throw std::runtime_error("Row is not a list");
-            } else if (item.size() != py_cols) {
+            const py::list item = list.attr("__getitem__")(i);
+            
+
+            if (item.size() != py_cols) {
                 throw std::runtime_error("Matrix rows have different lengths");
-            } else {
-                // copy values in row by row
-                for (size_t j = 0; j < py_cols; ++j) {
-                    this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
-                }
             }
+            // copy values in row by row
+            for (size_t j = 0; j < py_cols; ++j) {
+                this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
+            }
+          
 
         }
     }
