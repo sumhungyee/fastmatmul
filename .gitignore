@@ -1,0 +1,7 @@
+**/src2/**
+**/build/**
+**/.venv/**
+**/.vscode/**
+**/*.egg-info/**
+**/*.pdb
+**/*.exe
