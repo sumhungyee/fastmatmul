@@ -1,7 +1,14 @@
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <string>
+#include <cmath>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#define DECIMALPLACES 1000000
+#define LARGEMATRIX 53
+#define SMALL 3
 
 namespace py = pybind11;
 
@@ -63,7 +70,7 @@ class Matrix {
         if (this != &other) {
             this->rows = other.rows;
             this->cols = other.cols;
-            this->mat = make_unique<double[]>(other.rows * other.cols);
+            this->mat = std::make_unique<double[]>(other.rows * other.cols);
             for (size_t i = 0; i < rows * cols; ++i) this->mat[i] = other.mat[i];
             return *this;
         }
@@ -82,6 +89,118 @@ class Matrix {
         return Matrix(*this);
     }
 
+    string repr() {
+        string repr_str = "";
+        bool rows_too_big = rows > LARGEMATRIX;
+        bool cols_too_big = cols > LARGEMATRIX;
+        std::vector<size_t> rows_arr;
+        std::vector<size_t> cols_arr;
+        if (rows_too_big) {
+            rows_arr.reserve(SMALL * 2);
+            rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
+        } else {
+            for (size_t i = 0; i < rows; ++i) rows_arr.push_back(i);
+        }
+
+        if (cols_too_big) {
+            cols_arr.reserve(SMALL * 2);
+            cols_arr = {0, 1, 2, cols-3, cols-2, cols-1};
+        } else {
+            for (size_t i = 0; i < cols; ++i) cols_arr.push_back(i);
+        }
+
+        for (const size_t r : rows_arr) {
+            for (const size_t c : cols_arr) {
+                repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                if (c < cols - 1) {
+                    repr_str += ", ";
+                }
+                if (cols_too_big && c == SMALL - 1) {
+                    repr_str += "...";
+                }
+            }
+            repr_str += "\n";
+            if (rows_too_big && r == SMALL - 1) {
+                repr_str += "...\n";
+            }
+        }
+
+        // works but eh too long
+        
+        /*
+        if (rows < LARGEMATRIX && cols < LARGEMATRIX) {
+            for (size_t r = 0; r < rows; ++r) {
+                for (size_t c = 0; c < cols; ++c) {
+                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                    if (c < cols - 1) {
+                        repr_str += ", ";
+                    }
+                }
+                repr_str += "\n";
+            }
+
+        } else if (rows >= LARGEMATRIX && cols < LARGEMATRIX) {
+            std::vector<size_t> rows_arr(SMALL * 2);
+            rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
+
+            for (const size_t r : rows_arr) {
+                for (size_t c = 0; c < cols; ++c) {
+                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                    if (c < cols - 1) {
+                        repr_str += ", ";
+                    }
+                }
+                repr_str += "\n";
+                if (r == SMALL - 1) {
+                    repr_str += "...\n";
+                }
+            }
+
+        } else if (rows < LARGEMATRIX && cols >= LARGEMATRIX) {
+            std::vector<size_t> cols_arr(SMALL * 2);
+            cols_arr = {0, 1, 2, cols-3, cols-2, cols-1};
+            for (size_t r = 0; r < rows; ++r) {
+                for (const size_t c : cols_arr) {
+                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                    if (c < cols - 1) {
+                        repr_str += ", ";
+                    }
+                    if (c == SMALL - 1) {
+                        repr_str += "...";
+                    }
+                }
+                repr_str += "\n";
+            }
+        } else {
+            std::vector<size_t> cols_arr(SMALL * 2);
+            std::vector<size_t> rows_arr(SMALL * 2);
+            rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
+            cols_arr = {0, 1, 2, cols-3, cols-2, cols-1};
+
+            for (const size_t r : rows_arr) {
+                for (const size_t c : cols_arr) {
+                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                    if (c < cols - 1) {
+                        repr_str += ", ";
+                    }
+                    if (c == SMALL - 1) {
+                        repr_str += "...";
+                    }
+                }
+                repr_str += "\n";
+                if (r == SMALL - 1) {
+                    repr_str += "...\n";
+                }
+            }
+
+        }
+        */
+
+        return repr_str;
+    }
+
+    // riyal operations
+
 };
 
 int add(int i, int j) {
@@ -95,5 +214,6 @@ PYBIND11_MODULE(matmul, m) {
     py::class_<Matrix>(m, "Matrix")
         .def(py::init<const py::list&>())
         .def("assign", &Matrix::operator=) //https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assignment-operator
-        .def("copy", &Matrix::copy);
+        .def("copy", &Matrix::copy)
+        .def("__repr__", &Matrix::repr);
 }
