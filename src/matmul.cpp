@@ -187,28 +187,63 @@ class Matrix {
     }
 
     // riyal operations
-    Matrix add(const Matrix& other) {
+    Matrix apply_all_entries_mat(const Matrix& other, std::function<double(double, double)> op) {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] + other.mat[i];
+            for (size_t i = 0; i < entries; ++i) new_mat[i] = op(this->mat[i], other.mat[i]);
             return Matrix(rows, cols, std::move(new_mat));
         } else {
             throw std::runtime_error("Matrix must have the same dimensions");
         }
+    }
+
+    Matrix add(const Matrix& other) {
+        return apply_all_entries_mat(other, [](double a, double b) {
+            return a + b;
+            });
+    }
+
+    Matrix add(const double number) {
+        
+        size_t entries = rows * cols;
+        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] + number;
+        return Matrix(rows, cols, std::move(new_mat));
+        
     }
 
     Matrix sub(const Matrix& other) {
-        if (this->rows == other.rows && this->cols == other.cols) {
-            size_t entries = rows * cols;
-            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] - other.mat[i];
-            return Matrix(rows, cols, std::move(new_mat));
-
-        } else {
-            throw std::runtime_error("Matrix must have the same dimensions");
-        }
+        return apply_all_entries_mat(other, [](double a, double b) {
+            return a - b;
+            });
     }
+
+    Matrix sub(const double number) {
+        
+        size_t entries = rows * cols;
+        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] - number;
+        return Matrix(rows, cols, std::move(new_mat));
+        
+    }
+
+    //hadamard prod
+    Matrix mul(const Matrix& other) {
+        return apply_all_entries_mat(other, [](double a, double b) {
+            return a * b;
+            });
+    }
+
+    Matrix mul(const double number) {
+        size_t entries = rows * cols;
+        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] * number;
+        return Matrix(rows, cols, std::move(new_mat));
+    }
+
+    // Wrapper around simple product
+    // Matrix negate()
 
 };
 
@@ -220,6 +255,7 @@ PYBIND11_MODULE(matmul, m) {
     m.doc() = "A fun module I built while learning cpp, wip"; // still in the works
     m.def("add", &add, "A function that adds two numbers");
     //https://stackoverflow.com/questions/49301317/pybind11-passing-a-python-list-to-c-style-array
+    //https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
     py::class_<Matrix>(m, "Matrix")
         .def(py::init<const py::list&>())
         .def("assign", &Matrix::operator=) //https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assignment-operator
@@ -228,6 +264,13 @@ PYBIND11_MODULE(matmul, m) {
         .def("T", &Matrix::transpose)
         .def("get_array", &Matrix::get_array)
         .def("__getitem__", &Matrix::get_item)
-        .def("__add__", &Matrix::add)
-        .def("__sub__", &Matrix::sub);
+        .def("__add__", py::overload_cast<const Matrix&>(&Matrix::add))
+        .def("__add__", py::overload_cast<const double>(&Matrix::add))
+        .def("__radd__", py::overload_cast<const double>(&Matrix::add))
+        .def("__sub__", py::overload_cast<const Matrix&>(&Matrix::sub))
+        .def("__sub__", py::overload_cast<const double>(&Matrix::sub))
+        .def("__rsub__", py::overload_cast<const double>(&Matrix::sub))
+        .def("__mul__", py::overload_cast<const Matrix&>(&Matrix::mul))
+        .def("__mul__", py::overload_cast<const double>(&Matrix::mul))
+        .def("__rmul__", py::overload_cast<const double>(&Matrix::mul));
 }
