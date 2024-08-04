@@ -23,10 +23,16 @@ class Matrix {
         size_t rows, cols;
     
     Matrix(const size_t rows, const size_t cols) : rows(rows), cols(cols) {
-        if (rows <= 0 || 0 >= cols) {
+        if (rows <= 0 || cols <= 0) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
         mat = make_unique<double[]>(rows * cols);
+    }
+
+    Matrix(const size_t rows, const size_t cols, unique_ptr<double[]> mat) : rows(rows), cols(cols), mat(std::move(mat)) {
+        if (rows <= 0 || cols <= 0) {
+            throw std::out_of_range("Matrix dimensions must be positive");
+        }
     }
 
     // copy constructor
@@ -94,7 +100,7 @@ class Matrix {
         return std::vector<double>(this->mat.get(), this->mat.get() + size);
     }
 
-    // copy assignmnt
+    // probably not needed for insanely large matrices
     Matrix& operator=(const Matrix& other) {
         if (this != &other) {
             this->rows = other.rows;
@@ -106,6 +112,7 @@ class Matrix {
         }
         return *this;
     }
+
 
     double get_item(std::tuple<const size_t, const size_t> tup) const {
         size_t r = std::get<0>(tup);
@@ -167,76 +174,6 @@ class Matrix {
             }
         }
 
-        // works but eh too long
-        
-        /*
-        if (rows < LARGEMATRIX && cols < LARGEMATRIX) {
-            for (size_t r = 0; r < rows; ++r) {
-                for (size_t c = 0; c < cols; ++c) {
-                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
-                    if (c < cols - 1) {
-                        repr_str += ", ";
-                    }
-                }
-                repr_str += "\n";
-            }
-
-        } else if (rows >= LARGEMATRIX && cols < LARGEMATRIX) {
-            std::vector<size_t> rows_arr(SMALL * 2);
-            rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
-
-            for (const size_t r : rows_arr) {
-                for (size_t c = 0; c < cols; ++c) {
-                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
-                    if (c < cols - 1) {
-                        repr_str += ", ";
-                    }
-                }
-                repr_str += "\n";
-                if (r == SMALL - 1) {
-                    repr_str += "...\n";
-                }
-            }
-
-        } else if (rows < LARGEMATRIX && cols >= LARGEMATRIX) {
-            std::vector<size_t> cols_arr(SMALL * 2);
-            cols_arr = {0, 1, 2, cols-3, cols-2, cols-1};
-            for (size_t r = 0; r < rows; ++r) {
-                for (const size_t c : cols_arr) {
-                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
-                    if (c < cols - 1) {
-                        repr_str += ", ";
-                    }
-                    if (c == SMALL - 1) {
-                        repr_str += "...";
-                    }
-                }
-                repr_str += "\n";
-            }
-        } else {
-            std::vector<size_t> cols_arr(SMALL * 2);
-            std::vector<size_t> rows_arr(SMALL * 2);
-            rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
-            cols_arr = {0, 1, 2, cols-3, cols-2, cols-1};
-
-            for (const size_t r : rows_arr) {
-                for (const size_t c : cols_arr) {
-                    repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
-                    if (c < cols - 1) {
-                        repr_str += ", ";
-                    }
-                    if (c == SMALL - 1) {
-                        repr_str += "...";
-                    }
-                }
-                repr_str += "\n";
-                if (r == SMALL - 1) {
-                    repr_str += "...\n";
-                }
-            }
-
-        }
-        */
 
         return repr_str;
     }
@@ -250,6 +187,28 @@ class Matrix {
     }
 
     // riyal operations
+    Matrix add(const Matrix& other) {
+        if (this->rows == other.rows && this->cols == other.cols) {
+            size_t entries = rows * cols;
+            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+            for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] + other.mat[i];
+            return Matrix(rows, cols, std::move(new_mat));
+        } else {
+            throw std::runtime_error("Matrix must have the same dimensions");
+        }
+    }
+
+    Matrix sub(const Matrix& other) {
+        if (this->rows == other.rows && this->cols == other.cols) {
+            size_t entries = rows * cols;
+            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+            for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] - other.mat[i];
+            return Matrix(rows, cols, std::move(new_mat));
+
+        } else {
+            throw std::runtime_error("Matrix must have the same dimensions");
+        }
+    }
 
 };
 
@@ -268,5 +227,7 @@ PYBIND11_MODULE(matmul, m) {
         .def("__repr__", &Matrix::repr)
         .def("T", &Matrix::transpose)
         .def("get_array", &Matrix::get_array)
-        .def("__getitem__", &Matrix::get_item);
+        .def("__getitem__", &Matrix::get_item)
+        .def("__add__", &Matrix::add)
+        .def("__sub__", &Matrix::sub);
 }
