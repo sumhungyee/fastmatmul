@@ -107,8 +107,10 @@ class Matrix {
         return *this;
     }
 
-    double get_item(size_t r, size_t c) const {
-
+    double get_item(std::tuple<const size_t, const size_t> tup) const {
+        size_t r = std::get<0>(tup);
+        size_t c = std::get<1>(tup);
+        
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
@@ -151,7 +153,7 @@ class Matrix {
         for (const size_t r : rows_arr) {
             repr_str += "[";
             for (const size_t c : cols_arr) {
-                repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
+                repr_str += std::to_string(std::round(get_item(std::make_tuple(r, c)) * DECIMALPLACES) / DECIMALPLACES);
                 if (c < cols - 1) {
                     repr_str += ", ";
                 }
@@ -265,5 +267,6 @@ PYBIND11_MODULE(matmul, m) {
         .def("copy", &Matrix::copy)
         .def("__repr__", &Matrix::repr)
         .def("T", &Matrix::transpose)
-        .def("get_array", &Matrix::get_array);
+        .def("get_array", &Matrix::get_array)
+        .def("__getitem__", &Matrix::get_item);
 }
