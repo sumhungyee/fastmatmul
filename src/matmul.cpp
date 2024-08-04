@@ -179,6 +179,7 @@ class Matrix {
     }
 
     Matrix& transpose() {
+        // Also modifies original. (saves time)
         size_t temp = this->rows;
         this->rows = this->cols;
         this->cols = temp;
@@ -242,8 +243,10 @@ class Matrix {
         return Matrix(rows, cols, std::move(new_mat));
     }
 
-    // Wrapper around simple product
-    // Matrix negate()
+    // Wrapper around product
+    Matrix neg() {
+        return mul(-1);
+    }
 
 };
 
