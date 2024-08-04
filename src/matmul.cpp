@@ -275,5 +275,7 @@ PYBIND11_MODULE(matmul, m) {
         .def("__rsub__", py::overload_cast<const double>(&Matrix::sub))
         .def("__mul__", py::overload_cast<const Matrix&>(&Matrix::mul))
         .def("__mul__", py::overload_cast<const double>(&Matrix::mul))
-        .def("__rmul__", py::overload_cast<const double>(&Matrix::mul));
+        .def("__rmul__", py::overload_cast<const double>(&Matrix::mul))
+        .def("__neg__", &Matrix::neg)
+        ;
 }
