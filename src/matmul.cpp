@@ -15,8 +15,11 @@ namespace py = pybind11;
 using namespace std;
 
 class Matrix {
-    public:
+    private:
         unique_ptr<double[]> mat;
+        bool data_is_transposed = false;
+    
+    public:
         size_t rows, cols;
     
     Matrix(const size_t rows, const size_t cols) : rows(rows), cols(cols) {
@@ -29,14 +32,31 @@ class Matrix {
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
         mat = make_unique<double[]>(rows * cols);
-        for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+        
+        if (other.is_transposed()) {
+            // transposing already swaps this->rows with this->cols. no need to swap rows and cols
+            for (size_t i = 0; i < rows; ++i) {
+                for (size_t j = 0; j < cols; ++j) {
+                    mat[j + i * cols] = other.mat[i + j * other.rows];
+                }
+            }
+
+        } else {
+            for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+        }
+        
     }
 
     Matrix(const py::list& list) {
         size_t py_rows = list.size();
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
-        } 
+        } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0))) {
+            auto outer= py::list();
+            outer.append(list);
+            *this = Matrix(outer);
+            return;
+        }
             
         size_t py_cols;
         const py::list item = list.attr("__getitem__")(0);
@@ -65,11 +85,21 @@ class Matrix {
         }
     }
 
+    bool is_transposed() const {
+        return this->data_is_transposed;
+    }
+
+    std::vector<double> get_array() const {
+        size_t size = rows * cols;
+        return std::vector<double>(this->mat.get(), this->mat.get() + size);
+    }
+
     // copy assignmnt
     Matrix& operator=(const Matrix& other) {
         if (this != &other) {
             this->rows = other.rows;
             this->cols = other.cols;
+            this->data_is_transposed = other.is_transposed();
             this->mat = std::make_unique<double[]>(other.rows * other.cols);
             for (size_t i = 0; i < rows * cols; ++i) this->mat[i] = other.mat[i];
             return *this;
@@ -82,7 +112,13 @@ class Matrix {
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
-        return mat[r * cols + c];
+
+        if (this->is_transposed()) {
+            return mat[c * rows + r];
+        } else {
+            return mat[r * cols + c];
+        }
+        
     }
 
     Matrix copy() {
@@ -95,6 +131,8 @@ class Matrix {
         bool cols_too_big = cols > LARGEMATRIX;
         std::vector<size_t> rows_arr;
         std::vector<size_t> cols_arr;
+        std::vector<size_t> temp_arr;
+        // rows or cols too big, show only a few
         if (rows_too_big) {
             rows_arr.reserve(SMALL * 2);
             rows_arr = {0, 1, 2, rows-3, rows-2, rows-1};
@@ -109,7 +147,9 @@ class Matrix {
             for (size_t i = 0; i < cols; ++i) cols_arr.push_back(i);
         }
 
+        // representation
         for (const size_t r : rows_arr) {
+            repr_str += "[";
             for (const size_t c : cols_arr) {
                 repr_str += std::to_string(std::round(get_item(r, c) * DECIMALPLACES) / DECIMALPLACES);
                 if (c < cols - 1) {
@@ -119,7 +159,7 @@ class Matrix {
                     repr_str += "...";
                 }
             }
-            repr_str += "\n";
+            repr_str += "]\n";
             if (rows_too_big && r == SMALL - 1) {
                 repr_str += "...\n";
             }
@@ -199,6 +239,14 @@ class Matrix {
         return repr_str;
     }
 
+    Matrix& transpose() {
+        size_t temp = this->rows;
+        this->rows = this->cols;
+        this->cols = temp;
+        this->data_is_transposed = !this->is_transposed();
+        return *this;
+    }
+
     // riyal operations
 
 };
@@ -215,5 +263,7 @@ PYBIND11_MODULE(matmul, m) {
         .def(py::init<const py::list&>())
         .def("assign", &Matrix::operator=) //https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assignment-operator
         .def("copy", &Matrix::copy)
-        .def("__repr__", &Matrix::repr);
+        .def("__repr__", &Matrix::repr)
+        .def("T", &Matrix::transpose)
+        .def("get_array", &Matrix::get_array);
 }
