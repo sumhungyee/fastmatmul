@@ -39,20 +39,6 @@ class Matrix {
         mat = make_unique<double[]>(rows * cols);
         for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
         this->data_is_transposed = other.is_transposed();
-        
-        // if (other.is_transposed()) {
-            
-        //     for (size_t i = 0; i < rows; ++i) {
-        //         for (size_t j = 0; j < cols; ++j) {
-        //             mat[j + i * cols] = other.mat[i + j * other.rows];
-        //         }
-        //     }
-        //     this
-
-        // } else {
-        //     for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
-        // }
-        
     }
 
     Matrix(const py::list& list) {
@@ -89,7 +75,6 @@ class Matrix {
             for (size_t j = 0; j < py_cols; ++j) {
                 this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
             }
-          
         }
     }
 
@@ -123,8 +108,6 @@ class Matrix {
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
-
-        
 
         if (this->is_transposed()) {
             return mat[c * rows + r];
