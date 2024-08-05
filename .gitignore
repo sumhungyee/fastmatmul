@@ -5,3 +5,4 @@
 **/*.egg-info/**
 **/*.pdb
 **/*.exe
+**/.pytest_cache/**
