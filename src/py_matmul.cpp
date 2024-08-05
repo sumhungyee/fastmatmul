@@ -37,5 +37,7 @@ PYBIND11_MODULE(matmul, m) {
         .def("__rmul__", py::overload_cast<const double>(&Matrix::mul))
         .def("__neg__", &Matrix::neg)
         .def("__eq__", &Matrix::eq)
+        .def("__get_underlying__", &Matrix::get_array)
+       
         ;
 }

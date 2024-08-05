@@ -191,7 +191,15 @@ class Matrix {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            for (size_t i = 0; i < entries; ++i) new_mat[i] = op(this->mat[i], other.mat[i]);
+            std::tuple<size_t, size_t> tup;
+            for (size_t i = 0; i < rows; ++i) {
+                for (size_t j = 0; j < cols; ++j) {
+                    tup = std::make_tuple(i, j);
+                    new_mat[i * cols + j] = op(this->get_item(tup), other.get_item(tup));
+                }
+            }
+            //for (size_t i = 0; i < entries; ++i) new_mat[i] = op(this->mat[i], other.mat[i]);
+            
             return Matrix(rows, cols, std::move(new_mat));
         } else {
             throw std::runtime_error("Matrix must have the same dimensions");
@@ -250,12 +258,17 @@ class Matrix {
     bool eq(const Matrix& other) {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
-            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            for (size_t i = 0; i < entries; ++i) {
-                if (this->mat[i] != other.mat[i]) {
-                    return false;
+            //unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+            std::tuple<size_t, size_t> tup;
+            for (size_t i = 0; i < rows; ++i) {
+                for (size_t j = 0; j < cols; ++j) {
+                    tup = std::make_tuple(i, j);
+                    if (this->get_item(tup) != other.get_item(tup)) {
+                        return false;
+                    }
                 }
             }
+            
             return true;
         } else {
             return false;
