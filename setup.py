@@ -5,7 +5,7 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 ext_modules = [
     Pybind11Extension(
         "matmul",
-        sorted(glob("src/matmul.cpp")), 
+        sorted(glob("src/*.cpp")), 
     ),
 ]
 
