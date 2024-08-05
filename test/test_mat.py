@@ -40,6 +40,8 @@ def test_sum(setup_mats):
     assert B != B.copy().T() # B is not symmetric
     assert B == B.copy().T().T() != B.copy().T()
     assert B == (B.copy().T().T().T() * 0.5 + B.copy().T() * 0.5).T()
-    assert B.copy().T().T().copy().T().T().copy() == (B.copy().T().T().T() * 0.5 + B.copy().T() * 0.5).T()
+    assert B.copy().T().T().copy().T().T().copy() == (
+        1 + B.copy().T().copy().T().T() * 0.5 + B.copy().T() * 0.5 - 1
+        ).T().T().copy().T()
     
     
