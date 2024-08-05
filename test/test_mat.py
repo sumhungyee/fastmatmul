@@ -56,7 +56,7 @@ def test_insert(setup_mats):
     assert B.copy().T().T().copy().T()[1, 0] == new_val
     E[0, 1] += new_val
     D[0, 1] += new_val
-    assert E - D == C
+    assert (E.copy().T() - D.copy().T()).T() == C
     
     
     
