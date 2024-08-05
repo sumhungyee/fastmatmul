@@ -26,6 +26,7 @@ PYBIND11_MODULE(matmul, m) {
         .def("T", &Matrix::transpose)
         .def("get_array", &Matrix::get_array)
         .def("__getitem__", &Matrix::get_item)
+        .def("__setitem__", &Matrix::set_item)
         .def("__add__", py::overload_cast<const Matrix&>(&Matrix::add))
         .def("__add__", py::overload_cast<const double>(&Matrix::add))
         .def("__radd__", py::overload_cast<const double>(&Matrix::add))

@@ -117,6 +117,23 @@ class Matrix {
         
     }
 
+    void set_item(std::tuple<const size_t, const size_t> tup, double value) {
+        size_t r = std::get<0>(tup);
+        size_t c = std::get<1>(tup);
+        if (r >= rows || c >= cols) {
+            throw std::out_of_range("Matrix index out of bounds");
+        }
+
+        if (this->is_transposed()) {
+            this->mat[c * rows + r] = value;
+        } else {
+            this->mat[r * cols + c] = value;
+        }
+
+
+    }
+
+
     Matrix copy() {
         return Matrix(*this);
     }
@@ -187,7 +204,6 @@ class Matrix {
                     new_mat[i * cols + j] = op(this->get_item(tup), other.get_item(tup));
                 }
             }
-            //for (size_t i = 0; i < entries; ++i) new_mat[i] = op(this->mat[i], other.mat[i]);
             
             return Matrix(rows, cols, std::move(new_mat));
         } else {
@@ -274,5 +290,6 @@ class Matrix {
             return false;
         }
     }
+
 
 };

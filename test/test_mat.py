@@ -36,6 +36,7 @@ def test_sum(setup_mats):
     assert (C + D) == E
     assert E - D == C
     assert B + B == 2 * C
+    assert 10 * E - 10 * D == 10 * (E - D) == C * 10
     assert F == F.copy().T() == F.copy().T().T()
     assert B != B.copy().T() # B is not symmetric
     assert B == B.copy().T().T() != B.copy().T()
@@ -43,5 +44,19 @@ def test_sum(setup_mats):
     assert B.copy().T().T().copy().T().T().copy() == (
         1 + B.copy().T().copy().T().T() * 0.5 + B.copy().T() * 0.5 - 1
         ).T().T().copy().T()
+    
+def test_insert(setup_mats):
+    B = setup_mats["mat_B"]
+    C = setup_mats["mat_C"]
+    D = setup_mats["mat_D"]
+    E = setup_mats["mat_E"]
+    new_val = 100
+    B[0, 1] = new_val
+    assert B.copy().T()[1, 0] == new_val
+    assert B.copy().T().T().copy().T()[1, 0] == new_val
+    E[0, 1] += new_val
+    D[0, 1] += new_val
+    assert E - D == C
+    
     
     
