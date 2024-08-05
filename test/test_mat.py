@@ -8,10 +8,10 @@ def setup_mats():
     setup_mats["vec_A"] = Matrix([10, 100, 1000])
     setup_mats["vec_B"] = Matrix([10, 100, 1000])
     setup_mats["mat_A"] = Matrix([[1.2123213123, 12.1231231231], [2, 3]])
-    setup_mats["mat_B"] = Matrix([[5, 10], [1, 9]])
-    setup_mats["mat_C"] = Matrix([[5, 10], [1, 9]])
+    setup_mats["mat_B"] = Matrix([[5, 10], [2, 9]])
+    setup_mats["mat_C"] = Matrix([[5, 10], [2, 9]])
     setup_mats["mat_D"] = Matrix([[1, 2], [1, 2]])
-    setup_mats["mat_E"] = Matrix([[6, 12], [2, 11]])
+    setup_mats["mat_E"] = Matrix([[6, 12], [3, 11]])
     setup_mats["mat_F"] = Matrix([[0, 1], [1, 0]]) # diagonal/symmetric
     yield setup_mats
 
@@ -40,5 +40,6 @@ def test_sum(setup_mats):
     assert B != B.copy().T() # B is not symmetric
     assert B == B.copy().T().T() != B.copy().T()
     assert B == (B.copy().T().T().T() * 0.5 + B.copy().T() * 0.5).T()
+    assert B.copy().T().T().copy().T().T().copy() == (B.copy().T().T().T() * 0.5 + B.copy().T() * 0.5).T()
     
     

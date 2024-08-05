@@ -37,18 +37,21 @@ class Matrix {
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
         mat = make_unique<double[]>(rows * cols);
+        for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+        this->data_is_transposed = other.is_transposed();
         
-        if (other.is_transposed()) {
-            // transposing already swaps this->rows with this->cols. no need to swap rows and cols
-            for (size_t i = 0; i < rows; ++i) {
-                for (size_t j = 0; j < cols; ++j) {
-                    mat[j + i * cols] = other.mat[i + j * other.rows];
-                }
-            }
+        // if (other.is_transposed()) {
+            
+        //     for (size_t i = 0; i < rows; ++i) {
+        //         for (size_t j = 0; j < cols; ++j) {
+        //             mat[j + i * cols] = other.mat[i + j * other.rows];
+        //         }
+        //     }
+        //     this
 
-        } else {
-            for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
-        }
+        // } else {
+        //     for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+        // }
         
     }
 
@@ -121,6 +124,8 @@ class Matrix {
             throw std::out_of_range("Matrix index out of bounds");
         }
 
+        
+
         if (this->is_transposed()) {
             return mat[c * rows + r];
         } else {
@@ -132,6 +137,7 @@ class Matrix {
     Matrix copy() {
         return Matrix(*this);
     }
+
 
     string repr() {
         string repr_str = "";
@@ -206,6 +212,20 @@ class Matrix {
         }
     }
 
+    Matrix apply_all_entries_num(const double num, std::function<double(double, double)> op) {
+        size_t entries = rows * cols;
+        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+
+        std::tuple<size_t, size_t> tup;
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                tup = std::make_tuple(i, j);
+                new_mat[i * cols + j] = op(this->get_item(tup), num);
+            }
+        }
+        return Matrix(rows, cols, std::move(new_mat));
+    }
+
     Matrix add(const Matrix& other) {
         return apply_all_entries_mat(other, [](double a, double b) {
             return a + b;
@@ -214,10 +234,9 @@ class Matrix {
 
     Matrix add(const double number) {
         
-        size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] + number;
-        return Matrix(rows, cols, std::move(new_mat));
+        return apply_all_entries_num(number, [](double a, double b ) {
+            return a + b;
+        });
         
     }
 
@@ -229,10 +248,9 @@ class Matrix {
 
     Matrix sub(const double number) {
         
-        size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] - number;
-        return Matrix(rows, cols, std::move(new_mat));
+        return apply_all_entries_num(number, [](double a, double b ) {
+            return a - b;
+        });
         
     }
 
@@ -244,10 +262,9 @@ class Matrix {
     }
 
     Matrix mul(const double number) {
-        size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-        for (size_t i = 0; i < entries; ++i) new_mat[i] = this->mat[i] * number;
-        return Matrix(rows, cols, std::move(new_mat));
+        return apply_all_entries_num(number, [](double a, double b ) {
+            return a * b;
+        });
     }
 
     // Wrapper around product
