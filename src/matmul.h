@@ -247,4 +247,19 @@ class Matrix {
         return mul(-1);
     }
 
+    bool eq(const Matrix& other) {
+        if (this->rows == other.rows && this->cols == other.cols) {
+            size_t entries = rows * cols;
+            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+            for (size_t i = 0; i < entries; ++i) {
+                if (this->mat[i] != other.mat[i]) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 };
