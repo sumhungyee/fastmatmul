@@ -20,6 +20,7 @@ PYBIND11_MODULE(matmul, m) {
 
     py::class_<Matrix>(m, "Matrix")
         .def(py::init<const py::list&>())
+        .def(py::init<const py::tuple&>())
         .def("assign", &Matrix::operator=)
         .def("copy", &Matrix::copy)
         .def("__repr__", &Matrix::repr)

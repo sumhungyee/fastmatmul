@@ -42,20 +42,20 @@ class Matrix {
         this->data_is_transposed = other.is_transposed();
     }
 
-    Matrix(const py::list& list) {
-        //std::vector<std::vector<double>> casted = list.cast<std::vector<std::vector<double>>>();
-        //throw std::runtime_error("DONE");
+    template <typename T>
+    Matrix(const T& list) {
         this->rows = list.size();
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
-        } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0))) {
-            auto outer = py::list();
-            outer.append(list);
+        } else if (!py::isinstance<T>(list.attr("__getitem__")(0))) {
+            auto temp = py::list();
+            temp.append(list);
+            T outer = temp.cast<T>();
             *this = Matrix(outer);
             return;
         }
         
-        std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
+        const std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
         
         auto first_cast = matrix_cast[0];
         this->cols = first_cast.size();
@@ -69,22 +69,6 @@ class Matrix {
             }
             std::copy(casted.begin(), casted.end(), this->mat.get() + i * cols);
         }
-        
-        // for (size_t i = 0; i < py_cols; ++i) {
-        //     this->mat[i] = item.attr("__getitem__")(i).cast<double>();
-        // }
-
-        // for (size_t i = 1; i < py_rows; ++i) {
-        //     const py::list item = list.attr("__getitem__")(i);
-            
-        //     if (item.size() != py_cols) {
-        //         throw std::runtime_error("Matrix rows have different lengths");
-        //     }
-        //     // copy values in row by row
-        //     for (size_t j = 0; j < py_cols; ++j) {
-        //         this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
-        //     }
-        // }
     }
 
     bool is_transposed() const {
