@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -42,7 +43,9 @@ class Matrix {
     }
 
     Matrix(const py::list& list) {
-        size_t py_rows = list.size();
+        //std::vector<std::vector<double>> casted = list.cast<std::vector<std::vector<double>>>();
+        //throw std::runtime_error("DONE");
+        this->rows = list.size();
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
         } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0))) {
@@ -51,33 +54,37 @@ class Matrix {
             *this = Matrix(outer);
             return;
         }
-            
-        size_t py_cols;
-        const py::list item = list.attr("__getitem__")(0);
-        // assume its a list     
-        py_cols = item.size();
-
-        this->rows = py_rows;
-        this->cols = py_cols;
+        
+        std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
+        
+        auto first_cast = matrix_cast[0];
+        this->cols = first_cast.size();
         this->mat = make_unique<double[]>(rows * cols);
         // copy first row in
-
+        std::copy(first_cast.begin(), first_cast.end(), this->mat.get());
+        for (size_t i = 1; i < rows; ++i) {
+            auto casted = matrix_cast[i];
+            if (casted.size() != this->cols) {
+                throw std::runtime_error("Matrix rows have different lengths!");
+            }
+            std::copy(casted.begin(), casted.end(), this->mat.get() + i * cols);
+        }
         
-        for (size_t i = 0; i < py_cols; ++i) {
-            this->mat[i] = item.attr("__getitem__")(i).cast<double>();
-        }
+        // for (size_t i = 0; i < py_cols; ++i) {
+        //     this->mat[i] = item.attr("__getitem__")(i).cast<double>();
+        // }
 
-        for (size_t i = 1; i < py_rows; ++i) {
-            const py::list item = list.attr("__getitem__")(i);
+        // for (size_t i = 1; i < py_rows; ++i) {
+        //     const py::list item = list.attr("__getitem__")(i);
             
-            if (item.size() != py_cols) {
-                throw std::runtime_error("Matrix rows have different lengths");
-            }
-            // copy values in row by row
-            for (size_t j = 0; j < py_cols; ++j) {
-                this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
-            }
-        }
+        //     if (item.size() != py_cols) {
+        //         throw std::runtime_error("Matrix rows have different lengths");
+        //     }
+        //     // copy values in row by row
+        //     for (size_t j = 0; j < py_cols; ++j) {
+        //         this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
+        //     }
+        // }
     }
 
     bool is_transposed() const {
