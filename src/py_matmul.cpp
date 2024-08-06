@@ -1,4 +1,8 @@
 #include "matmul.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+
 
 /* References for self
 
@@ -8,7 +12,38 @@ https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assign
 
 */
 
+namespace py = pybind11;
+template <typename T>
+Matrix::Matrix(const T& list) {
+        
+    this->rows = list.size();
+    if (list.empty()) {
+        throw std::runtime_error("Matrix must be nonempty");
+    } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0)) && !py::isinstance<py::tuple>(list.attr("__getitem__")(0))) {
+        auto temp = py::list();
+        temp.append(list);
+        T outer = temp.cast<T>();
+        *this = Matrix(outer);
+        return;
+    }
 
+    //std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
+    const auto& matrix_cast = list.cast<std::vector<std::vector<double>>>();
+    
+    
+    auto first_cast = matrix_cast[0];
+    this->cols = first_cast.size();
+    this->mat = make_unique<double[]>(rows * cols);
+    // copy first row in
+    std::copy(first_cast.begin(), first_cast.end(), this->mat.get());
+    for (size_t i = 1; i < rows; ++i) {
+        auto casted = matrix_cast[i];
+        if (casted.size() != this->cols) {
+            throw std::runtime_error("Matrix rows have different lengths!");
+        }
+        std::copy(casted.begin(), casted.end(), this->mat.get() + i * cols);
+    }
+}
 
 int add(int i, int j) {
     return i + j;
@@ -22,10 +57,9 @@ PYBIND11_MODULE(matmul, m) {
         .def(py::init<const py::list&>())
         .def(py::init<const py::tuple&>())
         .def("assign", &Matrix::operator=)
+        .def("T", &Matrix::transpose)
         .def("copy", &Matrix::copy)
         .def("__repr__", &Matrix::repr)
-        .def("T", &Matrix::transpose)
-        .def("get_array", &Matrix::get_array)
         .def("__getitem__", &Matrix::get_item)
         .def("__setitem__", &Matrix::set_item)
         .def("__add__", py::overload_cast<const Matrix&>(&Matrix::add))
