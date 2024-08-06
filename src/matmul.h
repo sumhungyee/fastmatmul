@@ -6,17 +6,19 @@
 #include <cmath>
 #include <functional>
 
-
 #define DECIMALPLACES 1000000
 #define LARGEMATRIX 53
 #define SMALL 3
-
 using namespace std;
 
 class Matrix {
     private:
         std::unique_ptr<double[]> mat;
         bool data_is_transposed = false;
+
+        bool is_transposed() const {
+            return this->data_is_transposed;
+        }
     
     public:
         size_t rows, cols;
@@ -25,10 +27,10 @@ class Matrix {
         if (rows <= 0 || cols <= 0) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
-        mat = make_unique<double[]>(rows * cols);
+        mat = std::make_unique<double[]>(rows * cols);
     }
 
-    Matrix(const size_t rows, const size_t cols, unique_ptr<double[]> mat) : rows(rows), cols(cols), mat(std::move(mat)) {
+    Matrix(const size_t rows, const size_t cols, std::unique_ptr<double[]> mat) : rows(rows), cols(cols), mat(std::move(mat)) {
         if (rows <= 0 || cols <= 0) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
@@ -36,7 +38,7 @@ class Matrix {
 
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
-        mat = make_unique<double[]>(rows * cols);
+        mat = std::make_unique<double[]>(rows * cols);
         for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
         this->data_is_transposed = other.is_transposed();
     }
@@ -44,10 +46,6 @@ class Matrix {
     template <typename T>
     Matrix(const T& list);
 
-
-    bool is_transposed() const {
-        return this->data_is_transposed;
-    }
 
     std::vector<double> get_array() const {
         size_t size = rows * cols;
@@ -99,12 +97,12 @@ class Matrix {
     }
 
 
-    inline Matrix copy() {
+    Matrix copy() {
         return Matrix(*this);
     }
 
 
-    inline string repr() {
+    string repr() {
         string repr_str = "";
         bool rows_too_big = rows > LARGEMATRIX;
         bool cols_too_big = cols > LARGEMATRIX;
@@ -148,7 +146,7 @@ class Matrix {
         return repr_str;
     }
 
-    inline Matrix& transpose() {
+    Matrix& transpose() {
         // Also modifies original. (saves time)
         size_t temp = this->rows;
         this->rows = this->cols;
@@ -158,10 +156,10 @@ class Matrix {
     }
 
     // riyal operations
-    inline Matrix apply_all_entries_mat(const Matrix& other, std::function<double(double, double)> op) {
+    Matrix apply_all_entries_mat(const Matrix& other, std::function<double(double, double)> op) {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
-            unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+            unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
             std::tuple<size_t, size_t> tup;
             for (size_t i = 0; i < rows; ++i) {
                 for (size_t j = 0; j < cols; ++j) {
@@ -176,9 +174,9 @@ class Matrix {
         }
     }
 
-    inline Matrix apply_all_entries_num(const double num, std::function<double(double, double)> op) {
+    Matrix apply_all_entries_num(const double num, std::function<double(double, double)> op) {
         size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
         std::tuple<size_t, size_t> tup;
         for (size_t i = 0; i < rows; ++i) {
@@ -190,13 +188,13 @@ class Matrix {
         return Matrix(rows, cols, std::move(new_mat));
     }
 
-    inline Matrix add(const Matrix& other) {
+    Matrix add(const Matrix& other) {
         return apply_all_entries_mat(other, [](double a, double b) {
             return a + b;
             });
     }
 
-    inline Matrix add(const double number) {
+    Matrix add(const double number) {
         
         return apply_all_entries_num(number, [](double a, double b ) {
             return a + b;
@@ -204,13 +202,13 @@ class Matrix {
         
     }
 
-    inline Matrix sub(const Matrix& other) {
+    Matrix sub(const Matrix& other) {
         return apply_all_entries_mat(other, [](double a, double b) {
             return a - b;
             });
     }
 
-    inline Matrix sub(const double number) {
+    Matrix sub(const double number) {
         
         return apply_all_entries_num(number, [](double a, double b ) {
             return a - b;
@@ -219,24 +217,24 @@ class Matrix {
     }
 
     //hadamard prod
-    inline Matrix mul(const Matrix& other) {
+    Matrix mul(const Matrix& other) {
         return apply_all_entries_mat(other, [](double a, double b) {
             return a * b;
             });
     }
 
-    inline Matrix mul(const double number) {
+    Matrix mul(const double number) {
         return apply_all_entries_num(number, [](double a, double b ) {
             return a * b;
         });
     }
 
     // Wrapper around product
-    inline Matrix neg() {
+    Matrix neg() {
         return mul(-1);
     }
 
-    inline bool eq(const Matrix& other) {
+    bool eq(const Matrix& other) {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             //unique_ptr<double[]> new_mat = make_unique<double[]>(entries);

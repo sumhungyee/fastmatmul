@@ -74,7 +74,6 @@ PYBIND11_MODULE(matmul, m) {
         .def("__neg__", &Matrix::neg)
         .def("__eq__", &Matrix::eq)
         .def("__get_underlying__", &Matrix::get_array)
-        .def("__Tstate__", &Matrix::is_transposed)
        
         ;
 }
