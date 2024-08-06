@@ -16,7 +16,7 @@ int add(int i, int j) {
 
 PYBIND11_MODULE(matmul, m) {
     m.doc() = "A fun module I built while learning cpp, wip"; // still in the works
-    m.def("add", &add, "A function that adds two numbers");
+    //m.def("add", &add, "A function that adds two numbers");
 
     py::class_<Matrix>(m, "Matrix")
         .def(py::init<const py::list&>())

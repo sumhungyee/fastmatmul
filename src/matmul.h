@@ -46,7 +46,7 @@ class Matrix {
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
         } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0))) {
-            auto outer= py::list();
+            auto outer = py::list();
             outer.append(list);
             *this = Matrix(outer);
             return;
@@ -61,9 +61,12 @@ class Matrix {
         this->cols = py_cols;
         this->mat = make_unique<double[]>(rows * cols);
         // copy first row in
-        for (size_t i = 0; i < py_cols; ++i) {
-            this->mat[i] = item.attr("__getitem__")(i).cast<double>();
-        }
+
+        auto row_cast_zeroth = item.cast<std::vector<double>>();
+        std::copy(row_cast.begin(), row_cast.end(), this->mat.get());
+        // for (size_t i = 0; i < py_cols; ++i) {
+        //     this->mat[i] = item.attr("__getitem__")(i).cast<double>();
+        // }
 
         for (size_t i = 1; i < py_rows; ++i) {
             const py::list item = list.attr("__getitem__")(i);
@@ -72,9 +75,7 @@ class Matrix {
                 throw std::runtime_error("Matrix rows have different lengths");
             }
             // copy values in row by row
-            for (size_t j = 0; j < py_cols; ++j) {
-                this->mat[i * py_cols + j] = item.attr("__getitem__")(j).cast<double>();
-            }
+            std::copy(row_cast.begin(), row_cast.end(), this->mat.get() + i * py_cols);
         }
     }
 
