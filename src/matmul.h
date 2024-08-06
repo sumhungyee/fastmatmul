@@ -44,18 +44,21 @@ class Matrix {
 
     template <typename T>
     Matrix(const T& list) {
+        
         this->rows = list.size();
         if (list.empty()) {
             throw std::runtime_error("Matrix must be nonempty");
-        } else if (!py::isinstance<T>(list.attr("__getitem__")(0))) {
+        } else if (!py::isinstance<py::list>(list.attr("__getitem__")(0)) && !py::isinstance<py::tuple>(list.attr("__getitem__")(0))) {
             auto temp = py::list();
             temp.append(list);
             T outer = temp.cast<T>();
             *this = Matrix(outer);
             return;
         }
+
+        //std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
+        const auto& matrix_cast = list.cast<std::vector<std::vector<double>>>();
         
-        const std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
         
         auto first_cast = matrix_cast[0];
         this->cols = first_cast.size();
@@ -277,12 +280,9 @@ class Matrix {
                     }
                 }
             }
-            
             return true;
         } else {
             return false;
         }
     }
-
-
 };

@@ -7,11 +7,11 @@ def setup_mats():
     setup_mats = dict()
     setup_mats["vec_A"] = Matrix([10, 100, 1000])
     setup_mats["vec_B"] = Matrix([10, 100, 1000])
-    setup_mats["mat_A"] = Matrix([[1.2123213123, 12.1231231231], [2, 3]])
+    setup_mats["mat_A"] = Matrix([(1.2123213123, 12.1231231231), (2, 3)])
     setup_mats["mat_B"] = Matrix(((5, 10), (2, 9)))
     setup_mats["mat_C"] = Matrix([[5, 10], [2, 9]])
     setup_mats["mat_D"] = Matrix([[1, 2], [1, 2]])
-    setup_mats["mat_E"] = Matrix(((6, 12), (3, 11)))
+    setup_mats["mat_E"] = Matrix(([6, 12], (3, 11)))
     setup_mats["mat_F"] = Matrix([[0, 1], [1, 0]]) # diagonal/symmetric
     yield setup_mats
 
@@ -62,6 +62,10 @@ def test_insert(setup_mats):
 def test_empty(setup_mats):
     with pytest.raises(RuntimeError, match="Matrix must be nonempty"):
         Matrix([])
+
+    assert Matrix([(1,2), (3,4)]) == Matrix(([1,2], [3,4]))
+    # with pytest.raises(RuntimeError, match="Must be a list of lists or tuple of tuples"):
+    #     Matrix([(1,2)])
 
 
 
