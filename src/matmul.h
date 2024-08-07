@@ -70,6 +70,21 @@ class Matrix {
         size_t r = std::get<0>(tup);
         size_t c = std::get<1>(tup);
         
+        return this->get_item_inner(r, c);
+        // if (r >= rows || c >= cols) {
+        //     throw std::out_of_range("Matrix index out of bounds");
+        // }
+
+        // if (this->is_transposed()) {
+        //     return mat[c * rows + r];
+        // } else {
+        //     return mat[r * cols + c];
+        // }
+        
+    }
+
+    double get_item_inner(size_t r, size_t c) const {
+            
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
@@ -128,7 +143,7 @@ class Matrix {
         for (const size_t r : rows_arr) {
             repr_str += "[";
             for (const size_t c : cols_arr) {
-                repr_str += std::to_string(std::round(get_item(std::make_tuple(r, c)) * DECIMALPLACES) / DECIMALPLACES);
+                repr_str += std::to_string(std::round(get_item_inner(r, c) * DECIMALPLACES) / DECIMALPLACES);
                 if (c < cols - 1) {
                     repr_str += ", ";
                 }
@@ -160,11 +175,9 @@ class Matrix {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
-            std::tuple<size_t, size_t> tup;
             for (size_t i = 0; i < rows; ++i) {
                 for (size_t j = 0; j < cols; ++j) {
-                    tup = std::make_tuple(i, j);
-                    new_mat[i * cols + j] = op(this->get_item(tup), other.get_item(tup));
+                    new_mat[i * cols + j] = op(this->get_item_inner(i, j), other.get_item_inner(i, j));
                 }
             }
             
@@ -178,11 +191,11 @@ class Matrix {
         size_t entries = rows * cols;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-        std::tuple<size_t, size_t> tup;
+
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
-                tup = std::make_tuple(i, j);
-                new_mat[i * cols + j] = op(this->get_item(tup), num);
+
+                new_mat[i * cols + j] = op(this->get_item_inner(i, j), num);
             }
         }
         return Matrix(rows, cols, std::move(new_mat));
@@ -238,11 +251,9 @@ class Matrix {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             //unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            std::tuple<size_t, size_t> tup;
             for (size_t i = 0; i < rows; ++i) {
                 for (size_t j = 0; j < cols; ++j) {
-                    tup = std::make_tuple(i, j);
-                    if (this->get_item(tup) != other.get_item(tup)) {
+                    if (this->get_item_inner(i, j) != other.get_item_inner(i, j)) {
                         return false;
                     }
                 }
@@ -252,4 +263,28 @@ class Matrix {
             return false;
         }
     }
+
+    // Matrix mat_mul(const Matrix& other) {
+    //     if (this->cols != other.rows) {
+    //         throw std::runtime_error(
+    //             "Dimensions of " + std::to_string(this->cols) + " and " + std::to_string(other.rows) +  " do not match"
+    //         );
+    //     }
+    //     const size_t new_rows = this->rows;
+    //     const size_t new_cols = other.cols;
+    //     std::tuple<size_t, size_t> tup;
+    //     unique_ptr<double[]> new_mat = std::make_unique<double[]>(new_rows * new_cols);
+
+    //     for (size_t i = 0; i < new_rows; ++i) {
+    //         for (size_t j = 0; j < new_cols; ++j) {
+    //             new_mat[i * new_cols + j] = 0;
+    //             for (size_t k = 0; k < this->cols; ++k) {
+    //                 this_tup = std::make_tuple(i, k);
+    //                 other_tup = std::make_tuple(k, j);
+    //                 new_mat[i * new_cols + j] += this->get_item(this_tup) * other.get_item(other_tup);
+    //             }
+    //         }
+    //     }
+    //     return Matrix(new_rows, new_cols, std::move(new_mat));
+    // }
 };
