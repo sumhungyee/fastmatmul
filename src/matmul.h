@@ -9,7 +9,10 @@
 #define DECIMALPLACES 1000000
 #define LARGEMATRIX 53
 #define SMALL 3
+#define LARGEMATRIXFORSTRASSEN 1024
 using namespace std;
+
+// https://cs.stackexchange.com/questions/92666/strassen-algorithm-for-unusal-matrices
 
 class Matrix {
     private:
@@ -46,6 +49,36 @@ class Matrix {
     template <typename T>
     Matrix(const T& list);
 
+    static Matrix identity(size_t mat_size) {
+        size_t row = mat_size, col = mat_size;
+        size_t entries = row * col;
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+
+        for (size_t i = 0; i < row; ++i) {
+            for (size_t j = 0; j < col; ++j) {
+                if (i == j) {
+                    new_mat[i * col + j] = 1;
+                } else {
+                    new_mat[i * col + j] = 0;
+                }
+                
+            }
+        }
+        return Matrix(row, col, std::move(new_mat));
+    }
+
+    static Matrix zeroes(size_t row, size_t col) {
+        size_t entries = row * col;
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+
+        for (size_t i = 0; i < row; ++i) {
+            for (size_t j = 0; j < col; ++j) {
+                new_mat[i * col + j] = 0;
+            }
+        }
+        return Matrix(row, col, std::move(new_mat));
+    }
+
 
     std::vector<double> get_array() const {
         size_t size = rows * cols;
@@ -71,16 +104,6 @@ class Matrix {
         size_t c = std::get<1>(tup);
         
         return this->get_item_inner(r, c);
-        // if (r >= rows || c >= cols) {
-        //     throw std::out_of_range("Matrix index out of bounds");
-        // }
-
-        // if (this->is_transposed()) {
-        //     return mat[c * rows + r];
-        // } else {
-        //     return mat[r * cols + c];
-        // }
-        
     }
 
     double get_item_inner(size_t r, size_t c) const {
@@ -100,6 +123,11 @@ class Matrix {
     void set_item(std::tuple<const size_t, const size_t> tup, double value) {
         size_t r = std::get<0>(tup);
         size_t c = std::get<1>(tup);
+
+        this->set_item_inner(r, c, value);
+    }
+
+    void set_item_inner(size_t r, size_t c, double value) {
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
@@ -282,32 +310,35 @@ class Matrix {
 
     }
 
+    // pads to the smallest power of 2 greater than length
+    Matrix pad_matrix_to_2n(size_t length) {
+        Matrix padded = Matrix::zeroes(length, length);
+        for (size_t r = 0; r < this->rows; ++r) {
+            for (size_t c = 0; c < this->cols; ++c) {
+                padded.set_item_inner(r, c, this->get_item_inner(r, c));
+            }
+        }
+        return padded;
+    }
+
+    // uses strassen's algorithm
     Matrix mat_mul(const Matrix& other) {
         if (this->cols != other.rows) {
             throw std::runtime_error(
                 "Dimensions of " + std::to_string(this->cols) + " and " + std::to_string(other.rows) +  " do not match"
             );
         }
-        return mat_mul_default(other);
-    }
 
-    static Matrix identity(size_t row, size_t col) {
-        size_t entries = row * col;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        if (this->cols < LARGEMATRIXFORSTRASSEN || this->rows < LARGEMATRIXFORSTRASSEN || other.cols < LARGEMATRIXFORSTRASSEN) {
+            return mat_mul_default(other);
+        } else {
+            // pad both then mult
+            size_t length = std::max(std::max(this->cols, this->rows), other.cols);
 
-        for (size_t i = 0; i < row; ++i) {
-            for (size_t j = 0; j < col; ++j) {
-                if (i == j) {
-                    new_mat[i * col + j] = 1;
-                } else {
-                    new_mat[i * col + j] = 0;
-                }
-                
-            }
+            throw std::runtime_error("NOT IMPLEMENTED");
         }
-        return Matrix(row, col, std::move(new_mat));
+        
     }
-
 
     Matrix pow(long number) {
         if (this->cols != this->rows) {
@@ -315,7 +346,7 @@ class Matrix {
         }
 
         if (number == 0) {
-            return Matrix::identity(this->rows, this->cols);
+            return Matrix::identity(this->rows);
         } else if (number == 1) {
             return *this;
         } else if (number > 1) {
@@ -325,8 +356,7 @@ class Matrix {
                 number >>= 1;
             }
             vec.push_back(1);
-
-            Matrix curr = Matrix::identity(this->rows, this->cols);
+            Matrix curr = Matrix::identity(this->rows);
             Matrix multiplier = *this;
             for (const bool element : vec) {
                 
@@ -335,14 +365,10 @@ class Matrix {
                 }
                 multiplier = multiplier.mat_mul(multiplier);
             }
-            return curr;
-            
+            return curr; 
         } else {
             throw std::logic_error("Inverse not yet implemented");
         }
-
-        
-
     }
 
 };

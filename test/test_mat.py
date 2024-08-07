@@ -83,7 +83,13 @@ def test_pow(setup_mats):
         K = K @ D
         assert K == D ** i
     G = setup_mats["mat_G"]
-    assert G ** 2 == G
+    assert G ** 2 == G == G ** 240
+
+def test_static_methods(setup_mats):
+    I = setup_mats["mat_I"]
+    assert Matrix.identity(2) == I
+    assert Matrix.zeroes(2, 2) == I - I
+    assert Matrix.identity(4) != I
     
 
     

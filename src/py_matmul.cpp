@@ -62,6 +62,8 @@ PYBIND11_MODULE(matmul, m) {
         .def("__repr__", &Matrix::repr)
         .def("__getitem__", &Matrix::get_item)
         .def("__setitem__", &Matrix::set_item)
+        .def("identity", &Matrix::identity)
+        .def("zeroes", &Matrix::zeroes)
         .def("__add__", py::overload_cast<const Matrix&>(&Matrix::add))
         .def("__add__", py::overload_cast<const double>(&Matrix::add))
         .def("__radd__", py::overload_cast<const double>(&Matrix::add))
