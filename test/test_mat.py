@@ -13,6 +13,8 @@ def setup_mats():
     setup_mats["mat_D"] = Matrix([[1, 2], [1, 2]])
     setup_mats["mat_E"] = Matrix(([6, 12], (3, 11)))
     setup_mats["mat_F"] = Matrix([[0, 1], [1, 0]]) # diagonal/symmetric
+    setup_mats["mat_I"] = Matrix([[1, 0], (0, 1)]) # identity
+    setup_mats["mat_G"] = Matrix([[2, -2], (1, -1)]) # idempotent
     yield setup_mats
 
 def test_eq(setup_mats):
@@ -67,8 +69,24 @@ def test_empty(setup_mats):
 
     assert Matrix([(1,2), (3,4)]) == Matrix(([1,2], [3,4]))
 
+def test_matmul(setup_mats):
+    E = setup_mats["mat_E"]
+    I = setup_mats["mat_I"]
+    assert I @ I == I
+    assert E @ I == I @ E == 1 * E == E
 
 
+def test_pow(setup_mats):
+    D = setup_mats["mat_G"]
+    K = D.copy()
+    for i in range(2, 90):
+        K = K @ D
+        assert K == D ** i
+    G = setup_mats["mat_G"]
+    assert G ** 2 == G
+    
+
+    
 
 
     

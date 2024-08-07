@@ -264,27 +264,85 @@ class Matrix {
         }
     }
 
-    // Matrix mat_mul(const Matrix& other) {
-    //     if (this->cols != other.rows) {
-    //         throw std::runtime_error(
-    //             "Dimensions of " + std::to_string(this->cols) + " and " + std::to_string(other.rows) +  " do not match"
-    //         );
-    //     }
-    //     const size_t new_rows = this->rows;
-    //     const size_t new_cols = other.cols;
-    //     std::tuple<size_t, size_t> tup;
-    //     unique_ptr<double[]> new_mat = std::make_unique<double[]>(new_rows * new_cols);
+    Matrix mat_mul_default(const Matrix& other) {
+        const size_t new_rows = this->rows;
+        const size_t new_cols = other.cols;
+        
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(new_rows * new_cols);
 
-    //     for (size_t i = 0; i < new_rows; ++i) {
-    //         for (size_t j = 0; j < new_cols; ++j) {
-    //             new_mat[i * new_cols + j] = 0;
-    //             for (size_t k = 0; k < this->cols; ++k) {
-    //                 this_tup = std::make_tuple(i, k);
-    //                 other_tup = std::make_tuple(k, j);
-    //                 new_mat[i * new_cols + j] += this->get_item(this_tup) * other.get_item(other_tup);
-    //             }
-    //         }
-    //     }
-    //     return Matrix(new_rows, new_cols, std::move(new_mat));
-    // }
+        for (size_t i = 0; i < new_rows; ++i) {
+            for (size_t j = 0; j < new_cols; ++j) {
+                new_mat[i * new_cols + j] = 0;
+                for (size_t k = 0; k < this->cols; ++k) {
+                    new_mat[i * new_cols + j] += this->get_item_inner(i, k) * other.get_item_inner(k, j);
+                }
+            }
+        }
+        return Matrix(new_rows, new_cols, std::move(new_mat));
+
+    }
+
+    Matrix mat_mul(const Matrix& other) {
+        if (this->cols != other.rows) {
+            throw std::runtime_error(
+                "Dimensions of " + std::to_string(this->cols) + " and " + std::to_string(other.rows) +  " do not match"
+            );
+        }
+        return mat_mul_default(other);
+    }
+
+    static Matrix identity(size_t row, size_t col) {
+        size_t entries = row * col;
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+
+        for (size_t i = 0; i < row; ++i) {
+            for (size_t j = 0; j < col; ++j) {
+                if (i == j) {
+                    new_mat[i * col + j] = 1;
+                } else {
+                    new_mat[i * col + j] = 0;
+                }
+                
+            }
+        }
+        return Matrix(row, col, std::move(new_mat));
+    }
+
+
+    Matrix pow(long number) {
+        if (this->cols != this->rows) {
+            throw std::runtime_error("Matrix must be square");
+        }
+
+        if (number == 0) {
+            return Matrix::identity(this->rows, this->cols);
+        } else if (number == 1) {
+            return *this;
+        } else if (number > 1) {
+            std::vector<bool> vec;
+            while (number > 1) {
+                vec.push_back(bool(number & 0x1));
+                number >>= 1;
+            }
+            vec.push_back(1);
+
+            Matrix curr = Matrix::identity(this->rows, this->cols);
+            Matrix multiplier = *this;
+            for (const bool element : vec) {
+                
+                if (element) {
+                    curr = curr.mat_mul(multiplier);
+                }
+                multiplier = multiplier.mat_mul(multiplier);
+            }
+            return curr;
+            
+        } else {
+            throw std::logic_error("Inverse not yet implemented");
+        }
+
+        
+
+    }
+
 };
