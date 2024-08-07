@@ -97,7 +97,10 @@ class Matrix {
         }
         return *this;
     }
-
+    
+    std::tuple<size_t, size_t> get_dims() const {
+        return std::make_tuple(this->rows, this->cols);
+    }
 
     double get_item(std::tuple<const size_t, const size_t> tup) const {
         size_t r = std::get<0>(tup);
@@ -145,7 +148,7 @@ class Matrix {
     }
 
 
-    string repr() {
+    string repr() const {
         string repr_str = "";
         bool rows_too_big = rows > LARGEMATRIX;
         bool cols_too_big = cols > LARGEMATRIX;
@@ -199,78 +202,122 @@ class Matrix {
     }
 
     // riyal operations
-    Matrix apply_all_entries_mat(const Matrix& other, std::function<double(double, double)> op) {
-        if (this->rows == other.rows && this->cols == other.cols) {
-            size_t entries = rows * cols;
+    static Matrix apply_all_entries_mat(const Matrix& curr, const Matrix& other, std::function<double(double, double)> op) {
+        if (curr.rows == other.rows && curr.cols == other.cols) {
+            size_t entries = curr.rows * curr.cols;
             unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
-            for (size_t i = 0; i < rows; ++i) {
-                for (size_t j = 0; j < cols; ++j) {
-                    new_mat[i * cols + j] = op(this->get_item_inner(i, j), other.get_item_inner(i, j));
+            for (size_t i = 0; i < curr.rows; ++i) {
+                for (size_t j = 0; j < curr.cols; ++j) {
+                    new_mat[i * curr.cols + j] = op(curr.get_item_inner(i, j), other.get_item_inner(i, j));
                 }
             }
-            
-            return Matrix(rows, cols, std::move(new_mat));
+            return Matrix(curr.rows, curr.cols, std::move(new_mat));
         } else {
             throw std::runtime_error("Matrix must have the same dimensions");
         }
     }
 
-    Matrix apply_all_entries_num(const double num, std::function<double(double, double)> op) {
-        size_t entries = rows * cols;
+    static Matrix apply_all_entries_num(const Matrix& curr, const double num, std::function<double(double, double)> op) {
+        size_t entries = curr.rows * curr.cols;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
 
-        for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = 0; j < cols; ++j) {
-
-                new_mat[i * cols + j] = op(this->get_item_inner(i, j), num);
+        for (size_t i = 0; i < curr.rows; ++i) {
+            for (size_t j = 0; j < curr.cols; ++j) {
+                new_mat[i * curr.cols + j] = op(curr.get_item_inner(i, j), num);
             }
         }
-        return Matrix(rows, cols, std::move(new_mat));
+        return Matrix(curr.rows, curr.cols, std::move(new_mat));
+    }
+
+    // ADDING MATRICES
+
+    static Matrix add(const Matrix& matrix, const Matrix& other) {
+        return Matrix::apply_all_entries_mat(matrix, other, [](double a, double b) {
+            return a + b;
+            });
     }
 
     Matrix add(const Matrix& other) {
-        return apply_all_entries_mat(other, [](double a, double b) {
+        // it's a copy because I want to reduce abstraction overhead blah blah
+        return Matrix::apply_all_entries_mat(*this, other, [](double a, double b) {
+            return a + b;
+            });
+    }
+
+    // ADDING NUMBERS
+
+    static Matrix add(const Matrix& matrix, const double number) {
+        return Matrix::apply_all_entries_num(matrix, number, [](double a, double b) {
             return a + b;
             });
     }
 
     Matrix add(const double number) {
-        
-        return apply_all_entries_num(number, [](double a, double b ) {
+        return Matrix::apply_all_entries_num(*this, number, [](double a, double b ) {
             return a + b;
         });
         
     }
 
-    Matrix sub(const Matrix& other) {
-        return apply_all_entries_mat(other, [](double a, double b) {
+    // SUBBING MATRICES
+
+    static Matrix sub(const Matrix& matrix, const Matrix& other) {
+        return Matrix::apply_all_entries_mat(matrix, other, [](double a, double b) {
             return a - b;
             });
     }
 
+    Matrix sub(const Matrix& other) {
+        return Matrix::apply_all_entries_mat(*this, other, [](double a, double b) {
+            return a - b;
+            });
+    }
+
+    // SUBBING NUMBERS
+
+    static Matrix sub(const Matrix& matrix, const double number) {
+        return Matrix::apply_all_entries_num(matrix, number, [](double a, double b) {
+            return a - b;
+            });
+    }
+
+
     Matrix sub(const double number) {
-        
-        return apply_all_entries_num(number, [](double a, double b ) {
+        return Matrix::apply_all_entries_num(*this, number, [](double a, double b ) {
             return a - b;
         });
-        
     }
 
     //hadamard prod
+
+    static Matrix mul(const Matrix& matrix, const Matrix& other) {
+        return Matrix::apply_all_entries_mat(matrix, other, [](double a, double b) {
+            return a * b;
+            });
+    }
+
     Matrix mul(const Matrix& other) {
-        return apply_all_entries_mat(other, [](double a, double b) {
+        return Matrix::apply_all_entries_mat(*this, other, [](double a, double b) {
+            return a * b;
+            });
+    }
+
+    // MUL NUMS
+
+    static Matrix mul(const Matrix& matrix, const double number) {
+        return Matrix::apply_all_entries_num(matrix, number, [](double a, double b) {
             return a * b;
             });
     }
 
     Matrix mul(const double number) {
-        return apply_all_entries_num(number, [](double a, double b ) {
+        return Matrix::apply_all_entries_num(*this, number, [](double a, double b ) {
             return a * b;
         });
     }
 
-    // Wrapper around product
+    //Wrapper around product
     Matrix neg() {
         return mul(-1);
     }
@@ -292,7 +339,7 @@ class Matrix {
         }
     }
 
-    Matrix mat_mul_default(const Matrix& other) {
+    Matrix mat_mul_default(const Matrix& other) const {
         const size_t new_rows = this->rows;
         const size_t new_cols = other.cols;
         
@@ -311,8 +358,14 @@ class Matrix {
     }
 
     // pads to the smallest power of 2 greater than length
-    Matrix pad_matrix_to_2n(size_t length) {
-        Matrix padded = Matrix::zeroes(length, length);
+    Matrix pad_matrix_to_2n(size_t length) const {
+        // length is greater than this->cols and this->rows
+        size_t result = 1;
+        while (result < length) {
+            result <<= 1;
+        }
+
+        Matrix padded = Matrix::zeroes(result, result);
         for (size_t r = 0; r < this->rows; ++r) {
             for (size_t c = 0; c < this->cols; ++c) {
                 padded.set_item_inner(r, c, this->get_item_inner(r, c));
@@ -321,8 +374,89 @@ class Matrix {
         return padded;
     }
 
+    // static method, must be padded to square matrix
+    static std::tuple<Matrix, Matrix, Matrix, Matrix> get_quadrants(const Matrix& padded) {
+        size_t length = padded.rows >> 1; // 2 * length == this->cols;
+        unique_ptr<double[]> mat_1 = std::make_unique<double[]>(length * length);
+        unique_ptr<double[]> mat_2 = std::make_unique<double[]>(length * length);
+        unique_ptr<double[]> mat_3 = std::make_unique<double[]>(length * length);
+        unique_ptr<double[]> mat_4 = std::make_unique<double[]>(length * length);
+        for (size_t i = 0; i < length; ++i) {
+            for (size_t j = 0; j < length; ++j) {
+                mat_1[i * length + j] = padded.get_item_inner(i, j);
+                mat_2[i * length + j] = padded.get_item_inner(i, j + length);
+                mat_3[i * length + j] = padded.get_item_inner(i + length, j);
+                mat_4[i * length + j] = padded.get_item_inner(i + length, j + length);
+            }
+        }
+
+        return std::make_tuple(
+            Matrix(length, length, std::move(mat_1)),
+            Matrix(length, length, std::move(mat_2)),
+            Matrix(length, length, std::move(mat_3)),
+            Matrix(length, length, std::move(mat_4))
+        );
+    }
+
+    static Matrix combine(const Matrix& C11, const Matrix& C12, const Matrix& C21, const Matrix& C22) {
+        // number of rows must all be the same
+        const size_t length = C11.rows; // desired length is twice of that
+        const size_t desired = 2 * length;
+        unique_ptr<double[]> combined = std::make_unique<double[]>(desired * desired);
+        for (size_t r = 0; r < desired; ++r) {
+            for (size_t c = 0; c < desired; ++c) {
+                if (r < length && c < length) {
+                    combined[r * desired + c] = C11.get_item_inner(r, c);
+                } else if (r < length) {
+                    combined[r * desired + c] = C12.get_item_inner(r, c - length);
+                } else if (c < length) {
+                    combined[r * desired + c] = C21.get_item_inner(r - length, c);
+                } else {
+                    combined[r * desired + c] = C22.get_item_inner(r - length, c - length);
+                }
+                
+            }
+        }
+        return Matrix(desired, desired, std::move(combined));
+    }
+    // static method, must be padded
+    static Matrix strassen(const Matrix& a_padded, const Matrix& b_padded) {
+        // https://gist.github.com/syphh/1cb6b9bb57a400873fa9d05cd1ee7cc3
+        if (a_padded.rows < LARGEMATRIXFORSTRASSEN) {
+            return a_padded.mat_mul_default(b_padded);
+        }
+        const auto& tuple_1 = Matrix::get_quadrants(a_padded);
+        const auto& tuple_2 = Matrix::get_quadrants(b_padded);
+
+        const Matrix& A = std::get<0>(tuple_1);
+        const Matrix& B = std::get<1>(tuple_1);
+        const Matrix& C = std::get<2>(tuple_1);
+        const Matrix& D = std::get<3>(tuple_1);
+        // const auto& [A, B, C, D] = tuple_1; // but im not using C++ 17
+        
+        const Matrix& E = std::get<0>(tuple_2);
+        const Matrix& F = std::get<1>(tuple_2);
+        const Matrix& G = std::get<2>(tuple_2);
+        const Matrix& H = std::get<3>(tuple_2);
+
+        const auto& P1 = Matrix::strassen(Matrix::add(A, D), Matrix::add(E, H));
+        const auto& P2 = Matrix::strassen(D, Matrix::sub(G, E));
+        const auto& P3 = Matrix::strassen(Matrix::add(A, B), H);
+        const auto& P4 = Matrix::strassen(Matrix::sub(B, D), Matrix::add(G, H));
+        const auto& P5 = Matrix::strassen(A, Matrix::sub(F, H));
+        const auto& P6 = Matrix::strassen(Matrix::add(C, D), E);
+        const auto& P7 = Matrix::strassen(Matrix::sub(A, C), Matrix::add(E, F));
+
+        const auto& C11 = Matrix::add(Matrix::add(P1, P2), Matrix::sub(P4, P3));
+        const auto& C12 = Matrix::add(P5, P3);
+        const auto& C21 = Matrix::add(P2, P6);
+        const auto& C22 = Matrix::sub(Matrix::add(P1, P5), Matrix::add(P6, P7));
+        // combine
+        return Matrix::combine(C11, C12, C21, C22);
+    }
+
     // uses strassen's algorithm
-    Matrix mat_mul(const Matrix& other) {
+    Matrix mat_mul(const Matrix& other) const {
         if (this->cols != other.rows) {
             throw std::runtime_error(
                 "Dimensions of " + std::to_string(this->cols) + " and " + std::to_string(other.rows) +  " do not match"
@@ -334,8 +468,20 @@ class Matrix {
         } else {
             // pad both then mult
             size_t length = std::max(std::max(this->cols, this->rows), other.cols);
+            const Matrix this_padded = this->pad_matrix_to_2n(length);
+            const Matrix other_padded = other.pad_matrix_to_2n(length);
+            // std::cout << this_padded.repr() << std::endl;
+            // std::cout << other_padded.repr() << std::endl;
+            Matrix padded_result = strassen(this_padded, other_padded);
+            //remove padding
+            unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
+            for (size_t i = 0; i < this->rows; ++i) {
+                for (size_t j = 0; j < other.cols; ++j) {
+                    unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
+                }
+            }
 
-            throw std::runtime_error("NOT IMPLEMENTED");
+            return Matrix(this->rows, other.cols, std::move(unpadded));
         }
         
     }
