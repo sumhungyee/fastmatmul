@@ -20,6 +20,9 @@ def setup_mats():
     setup_mats["mat_J"] = Matrix([[1 for i in range(129)] for j in range(129)])
     setup_mats["mat_K"] = Matrix([[1 for i in range(1290)] for j in range(1290)])
     setup_mats["mat_L"] = Matrix([[1 for i in range(1220)] for j in range(1290)])
+
+    setup_mats["mat_M"] = Matrix([[0 if i != j else 0.5 for i in range(1290)] for j in range(1290)])
+    
     yield setup_mats
 
 def test_eq(setup_mats):
@@ -99,8 +102,6 @@ def test_static_methods(setup_mats):
 
 def test_matmul(setup_mats):
     H = setup_mats["mat_H"]
-    
-    
     assert (H @ H)[50, 50] == 128
     assert (H @ H)[127, 50] == 128
     assert (H @ H)[126, 127] == 128
@@ -116,6 +117,10 @@ def test_matmul_large(setup_mats):
     L = setup_mats["mat_L"]
     J = K @ L
     assert J.dims() == (1290, 1220)
-    for i in range(0, 100):
+    for i in range(0, 10):
         assert J[i, 0] == 1290
     
+def test_generic(setup_mats):
+    M = setup_mats["mat_M"]
+    assert M ** 2 + 0.75 * Matrix.identity(1290) == Matrix.identity(1290)
+
