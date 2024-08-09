@@ -20,6 +20,7 @@ def benchmark_matmul(mat1, mat2):
     return mat1 @ mat2
 
 if __name__ == "__main__":
+    trials = 5
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
     timers = [
@@ -27,7 +28,7 @@ if __name__ == "__main__":
         Timer('benchmark_matmul(L1, L2)', 'gc.enable()', globals=globals())
     ]
     for ele in timers:
-        print(ele.timeit(number=5))
+        print(ele.timeit(number=trials))
     
     
     
