@@ -12,7 +12,7 @@ class PyTestMatrix:
         self.rows = len(lsofls)
         self.cols = curr_len
     
-    def __matmul__(self, other: PyTestMatrix) -> PyTestMatrix:
+    def __matmul__(self, other):
         assert self.cols == other.rows
         newmat = [[0 for _ in range(other.cols)] for _ in range(self.rows)]
         for r in self.rows:
@@ -59,11 +59,12 @@ if __name__ == "__main__":
         print(ele.timeit(number=trials))
     
     PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
+    print("python:")
     pytimers = [
         Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
         Timer('benchmark_matmul(PL1, PL2)', 'gc.enable()', globals=globals())
     ]
-    
+
     for ele in pytimers:
         print(ele.timeit(number=trials))
     
