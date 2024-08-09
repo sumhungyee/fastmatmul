@@ -9,7 +9,7 @@
 #define DECIMALPLACES 1000000
 #define LARGEMATRIX 53
 #define SMALL 3
-#define LARGEMATRIXFORSTRASSEN 1024
+#define LARGEMATRIXFORSTRASSEN 64
 using namespace std;
 
 // https://cs.stackexchange.com/questions/92666/strassen-algorithm-for-unusal-matrices

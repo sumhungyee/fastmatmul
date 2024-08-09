@@ -27,7 +27,7 @@ if __name__ == "__main__":
         Timer('benchmark_matmul(L1, L2)', 'gc.enable()', globals=globals())
     ]
     for ele in timers:
-        print(ele.timeit(number=1))
+        print(ele.timeit(number=5))
     
     
     
