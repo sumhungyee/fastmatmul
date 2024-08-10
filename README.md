@@ -2,12 +2,12 @@
 A project I made while learning cpp. This is a python library for "fast" and efficient matrix multiplication (at least compared to base python)
 
 ## How is it faster?
-1. I use pybind11 and C++ for greater efficiency compared to tortoise-like python.
+1. I use pybind11 and C++ for greater efficiency compared to tortoise-like base python.
 2. Optimised algorithms like Strassen's for matrix multiplication, instead of $O(n^3)$ stuff, leading to better $O(n^{log_{2}7})$ time complexity.
-3. (Some) CPU parallelisation (although not that good)
-
+3. (Some) CPU parallelisation
+   
 ## Is it faster?
-About 90 times faster than base python on my first benchmark of 1 million entries.
+About 90 times faster than base python on my first benchmark of 1 million entries (1000 by 1000).
 
 ## Can it beat NumPy?
 Tough luck.
