@@ -1,5 +1,5 @@
-# fastmatmul
-A python library for fast and efficient matrix multiplication
+# "fast"matmul
+A project I made while learning cpp. This is a python library for "fast" and efficient matrix multiplication (at least compared to python)
 
 ## Installation
 
