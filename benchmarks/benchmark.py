@@ -34,11 +34,11 @@ def setup_mats():
     setup_mats["pymat_K1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
     setup_mats["pymat_K2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
 
-    setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(4290)] for j in range(4290)])
-    setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(4290)] for j in range(4290)])
+    setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
+    setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
 
-    setup_mats["pymat_L1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(4290)] for j in range(4290)])
-    setup_mats["pymat_L2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(4290)] for j in range(4290)])
+    setup_mats["pymat_L1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
+    setup_mats["pymat_L2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
 
     setup_mats["mat_M"] = Matrix([[0 if i != j else 0.5 for i in range(1290)] for j in range(1290)])
     return setup_mats
@@ -48,13 +48,15 @@ def benchmark_matmul(mat1, mat2):
     return mat1 @ mat2
 
 if __name__ == "__main__":
+    
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-    file_handler = logging.FileHandler('log_file.log')
+    file_handler = logging.FileHandler('benchmarks/benchmark.log')
     file_handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
+    print("Logger set.")
 
     trials = 3
     m = setup_mats()
