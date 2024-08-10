@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <omp.h>
 #include <string>
 #include <cmath>
 #include <functional>
@@ -13,6 +14,7 @@
 using namespace std;
 
 // https://cs.stackexchange.com/questions/92666/strassen-algorithm-for-unusal-matrices
+// parallelisation thanks to https://github.com/spectre900/Parallel-Strassen-Algorithm/blob/master/omp_strassen.cpp
 
 class Matrix {
     private:
@@ -25,6 +27,8 @@ class Matrix {
     
     public:
         size_t rows, cols;
+
+    Matrix() : rows(0), cols(0), mat(nullptr), data_is_transposed(false) {}
     
     Matrix(const size_t rows, const size_t cols) : rows(rows), cols(cols) {
         if (rows <= 0 || cols <= 0) {
@@ -42,7 +46,10 @@ class Matrix {
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
         mat = std::make_unique<double[]>(rows * cols);
-        for (size_t i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+
+        //#pragma omp parallel for
+        for (long i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
+
         this->data_is_transposed = other.is_transposed();
     }
 
@@ -54,8 +61,9 @@ class Matrix {
         size_t entries = row * col;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-        for (size_t i = 0; i < row; ++i) {
-            for (size_t j = 0; j < col; ++j) {
+        #pragma omp parallel for
+        for (long i = 0; i < row; ++i) {
+            for (long j = 0; j < col; ++j) {
                 if (i == j) {
                     new_mat[i * col + j] = 1;
                 } else {
@@ -71,7 +79,8 @@ class Matrix {
         size_t entries = row * col;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-        for (size_t i = 0; i < row; ++i) {
+        #pragma omp parallel for
+        for (long i = 0; i < row; ++i) {
             for (size_t j = 0; j < col; ++j) {
                 new_mat[i * col + j] = 0;
             }
@@ -206,8 +215,9 @@ class Matrix {
         if (curr.rows == other.rows && curr.cols == other.cols) {
             size_t entries = curr.rows * curr.cols;
             unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
-            for (size_t i = 0; i < curr.rows; ++i) {
-                for (size_t j = 0; j < curr.cols; ++j) {
+            
+            for (long i = 0; i < curr.rows; ++i) {
+                for (long j = 0; j < curr.cols; ++j) {
                     new_mat[i * curr.cols + j] = op(curr.get_item_inner(i, j), other.get_item_inner(i, j));
                 }
             }
@@ -221,9 +231,8 @@ class Matrix {
         size_t entries = curr.rows * curr.cols;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-
-        for (size_t i = 0; i < curr.rows; ++i) {
-            for (size_t j = 0; j < curr.cols; ++j) {
+        for (long i = 0; i < curr.rows; ++i) {
+            for (long j = 0; j < curr.cols; ++j) {
                 new_mat[i * curr.cols + j] = op(curr.get_item_inner(i, j), num);
             }
         }
@@ -326,8 +335,9 @@ class Matrix {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
             //unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
-            for (size_t i = 0; i < rows; ++i) {
-                for (size_t j = 0; j < cols; ++j) {
+
+            for (long i = 0; i < rows; ++i) {
+                for (long j = 0; j < cols; ++j) {
                     if (this->get_item_inner(i, j) != other.get_item_inner(i, j)) {
                         return false;
                     }
@@ -342,15 +352,17 @@ class Matrix {
     Matrix mat_mul_default(const Matrix& other) const {
         const size_t new_rows = this->rows;
         const size_t new_cols = other.cols;
-        
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(new_rows * new_cols);
+        const size_t entries = new_rows * new_cols;
+        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-        for (size_t i = 0; i < new_rows; ++i) {
-            for (size_t j = 0; j < new_cols; ++j) {
-                new_mat[i * new_cols + j] = 0;
+
+        for (long i = 0; i < new_rows; ++i) {
+            for (long j = 0; j < new_cols; ++j) {
+                double temp = 0;
                 for (size_t k = 0; k < this->cols; ++k) {
-                    new_mat[i * new_cols + j] += this->get_item_inner(i, k) * other.get_item_inner(k, j);
+                    temp += this->get_item_inner(i, k) * other.get_item_inner(k, j);
                 }
+                new_mat[i * new_cols + j] = temp;
             }
         }
         return Matrix(new_rows, new_cols, std::move(new_mat));
@@ -366,8 +378,10 @@ class Matrix {
         }
 
         Matrix padded = Matrix::zeroes(result, result);
-        for (size_t r = 0; r < this->rows; ++r) {
-            for (size_t c = 0; c < this->cols; ++c) {
+
+        #pragma omp parallel for
+        for (long r = 0; r < this->rows; ++r) {
+            for (long c = 0; c < this->cols; ++c) {
                 padded.set_item_inner(r, c, this->get_item_inner(r, c));
             }
         }
@@ -381,8 +395,9 @@ class Matrix {
         unique_ptr<double[]> mat_2 = std::make_unique<double[]>(length * length);
         unique_ptr<double[]> mat_3 = std::make_unique<double[]>(length * length);
         unique_ptr<double[]> mat_4 = std::make_unique<double[]>(length * length);
-        for (size_t i = 0; i < length; ++i) {
-            for (size_t j = 0; j < length; ++j) {
+        
+        for (long i = 0; i < length; ++i) {
+            for (long j = 0; j < length; ++j) {
                 mat_1[i * length + j] = padded.get_item_inner(i, j);
                 mat_2[i * length + j] = padded.get_item_inner(i, j + length);
                 mat_3[i * length + j] = padded.get_item_inner(i + length, j);
@@ -403,8 +418,9 @@ class Matrix {
         const size_t length = C11.rows; // desired length is twice of that
         const size_t desired = 2 * length;
         unique_ptr<double[]> combined = std::make_unique<double[]>(desired * desired);
-        for (size_t r = 0; r < desired; ++r) {
-            for (size_t c = 0; c < desired; ++c) {
+
+        for (long r = 0; r < desired; ++r) {
+            for (long c = 0; c < desired; ++c) {
                 if (r < length && c < length) {
                     combined[r * desired + c] = C11.get_item_inner(r, c);
                 } else if (r < length) {
@@ -439,18 +455,43 @@ class Matrix {
         const Matrix& G = std::get<2>(tuple_2);
         const Matrix& H = std::get<3>(tuple_2);
 
-        const auto& P1 = Matrix::strassen(Matrix::add(A, D), Matrix::add(E, H));
-        const auto& P2 = Matrix::strassen(D, Matrix::sub(G, E));
-        const auto& P3 = Matrix::strassen(Matrix::add(A, B), H);
-        const auto& P4 = Matrix::strassen(Matrix::sub(B, D), Matrix::add(G, H));
-        const auto& P5 = Matrix::strassen(A, Matrix::sub(F, H));
-        const auto& P6 = Matrix::strassen(Matrix::add(C, D), E);
-        const auto& P7 = Matrix::strassen(Matrix::sub(A, C), Matrix::add(E, F));
+        Matrix P1, P2, P3, P4, P5, P6, P7;
 
-        const auto& C11 = Matrix::add(Matrix::add(P1, P2), Matrix::sub(P4, P3));
-        const auto& C12 = Matrix::add(P5, P3);
-        const auto& C21 = Matrix::add(P2, P6);
-        const auto& C22 = Matrix::sub(Matrix::add(P1, P5), Matrix::add(P6, P7));
+        #pragma omp parallel
+        {
+            #pragma omp single
+            {
+                #pragma omp task
+                P1 = Matrix::strassen(Matrix::add(A, D), Matrix::add(E, H));
+
+                #pragma omp task
+                P2 = Matrix::strassen(D, Matrix::sub(G, E));
+
+                #pragma omp task 
+                P3 = Matrix::strassen(Matrix::add(A, B), H);
+
+                #pragma omp task
+                P4 = Matrix::strassen(Matrix::sub(B, D), Matrix::add(G, H));
+
+                #pragma omp task 
+                P5 = Matrix::strassen(A, Matrix::sub(F, H));
+
+                #pragma omp task
+                P6 = Matrix::strassen(Matrix::add(C, D), E);
+
+                #pragma omp task
+                P7 = Matrix::strassen(Matrix::sub(A, C), Matrix::add(E, F));
+                #pragma omp taskwait
+            }
+            
+        }
+
+        const Matrix& C11 = Matrix::add(Matrix::add(P1, P2), Matrix::sub(P4, P3));
+        const Matrix& C12 = Matrix::add(P5, P3);
+        const Matrix& C21 = Matrix::add(P2, P6);
+        const Matrix& C22 = Matrix::sub(Matrix::add(P1, P5), Matrix::add(P6, P7));
+
+
         // combine
         return Matrix::combine(C11, C12, C21, C22);
     }
@@ -470,13 +511,13 @@ class Matrix {
             size_t length = std::max(std::max(this->cols, this->rows), other.cols);
             const Matrix this_padded = this->pad_matrix_to_2n(length);
             const Matrix other_padded = other.pad_matrix_to_2n(length);
-            // std::cout << this_padded.repr() << std::endl;
-            // std::cout << other_padded.repr() << std::endl;
             Matrix padded_result = strassen(this_padded, other_padded);
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
-            for (size_t i = 0; i < this->rows; ++i) {
-                for (size_t j = 0; j < other.cols; ++j) {
+
+            #pragma omp parallel for
+            for (long i = 0; i < this->rows; ++i) {
+                for (long j = 0; j < other.cols; ++j) {
                     unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
                 }
             }
@@ -505,7 +546,6 @@ class Matrix {
             Matrix curr = Matrix::identity(this->rows);
             Matrix multiplier = *this;
             for (const bool element : vec) {
-                
                 if (element) {
                     curr = curr.mat_mul(multiplier);
                 }

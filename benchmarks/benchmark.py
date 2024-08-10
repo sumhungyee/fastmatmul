@@ -15,8 +15,8 @@ class PyTestMatrix:
     def __matmul__(self, other):
         assert self.cols == other.rows
         newmat = [[0 for _ in range(other.cols)] for _ in range(self.rows)]
-        for r in self.rows:
-            for c in other.cols: # new mat's cols
+        for r in range(self.rows):
+            for c in range(other.cols): # new mat's cols
                 for i in range(self.cols):
                     newmat[r][c] = self.mat[r][i] * other.mat[i][c]
 
@@ -47,7 +47,7 @@ def benchmark_matmul(mat1, mat2):
     return mat1 @ mat2
 
 if __name__ == "__main__":
-    trials = 5
+    trials = 3
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
     print("cpp bindings:")
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         Timer('benchmark_matmul(L1, L2)', 'gc.enable()', globals=globals())
     ]
     for ele in timers:
-        print(ele.timeit(number=trials))
+        print(ele.timeit(number=trials) / trials)
     
     PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
     print("python:")
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     ]
 
     for ele in pytimers:
-        print(ele.timeit(number=trials))
+        print(ele.timeit(number=trials) / trials)
     
     
     
