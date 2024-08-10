@@ -30,4 +30,6 @@ mat = Matrix([1, 2, 3]) # Vectors are column vectors by default
 mat.T() # transposes mat
 a = mat.copy() # copies mat
 result = a @ Matrix([3, 2, 1]) # Performs a matrix multiplication! Yay!
+sum = mat + mat # +, - and * (hadamard product) work, / not defined.
+pows = mat ** 10 # matrix mult with itself 10 times, optimised
 ```
