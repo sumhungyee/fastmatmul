@@ -1,5 +1,6 @@
 from timeit import Timer
 from matmul import Matrix
+import logging
 import gc
 import random
 
@@ -47,26 +48,34 @@ def benchmark_matmul(mat1, mat2):
     return mat1 @ mat2
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    file_handler = logging.FileHandler('log_file.log')
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
     trials = 3
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
-    print("cpp bindings:")
+    logger.info("cpp bindings:")
     timers = [
         Timer('benchmark_matmul(K1, K2)', 'gc.enable()', globals=globals()),
         Timer('benchmark_matmul(L1, L2)', 'gc.enable()', globals=globals())
     ]
     for ele in timers:
-        print(ele.timeit(number=trials) / trials)
+        logger.info(ele.timeit(number=trials) / trials)
     
     PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
-    print("python:")
+    logger.info("python:")
     pytimers = [
         Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
         Timer('benchmark_matmul(PL1, PL2)', 'gc.enable()', globals=globals())
     ]
 
     for ele in pytimers:
-        print(ele.timeit(number=trials) / trials)
+        logger.info(ele.timeit(number=trials) / trials)
     
     
     
