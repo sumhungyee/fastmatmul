@@ -34,11 +34,11 @@ A project I made while learning cpp. This is a python library for "fast" and eff
      ```
    
 ## Is it faster?
-~300 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
+~325 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
 :cold_sweat:
-(lol maybe at $n \gt 50000$)
+(lol maybe at $n \gt 50000$, but currently at $n = 12290$ it's about 25 times slower. Goes to show how optimised numpy is. I'm happy to welcome more suggestions for optimisations)
 
 ## Installation
 1. Requirements C++ 14 or after.
