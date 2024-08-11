@@ -69,15 +69,15 @@ if __name__ == "__main__":
     for ele in timers:
         logger.info(ele.timeit(number=trials) / trials)
     
-    PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
-    logger.info("python:")
-    pytimers = [
-        Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
-        Timer('benchmark_matmul(PL1, PL2)', 'gc.enable()', globals=globals())
-    ]
+    # PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
+    # logger.info("python:")
+    # pytimers = [
+    #     Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
+    #     Timer('benchmark_matmul(PL1, PL2)', 'gc.enable()', globals=globals())
+    # ]
 
-    for ele in pytimers:
-        logger.info(ele.timeit(number=trials) / trials)
+    # for ele in pytimers:
+    #     logger.info(ele.timeit(number=trials) / trials)
     
     
     

@@ -379,9 +379,10 @@ class Matrix {
 
         Matrix padded = Matrix::zeroes(result, result);
 
-        #pragma omp parallel for
-        for (long r = 0; r < this->rows; ++r) {
-            for (long c = 0; c < this->cols; ++c) {
+        long r, c;
+        #pragma omp parallel for private(r, c)
+        for (r = 0; r < this->rows; ++r) {
+            for (c = 0; c < this->cols; ++c) {
                 padded.set_item_inner(r, c, this->get_item_inner(r, c));
             }
         }
@@ -515,9 +516,10 @@ class Matrix {
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
 
-            #pragma omp parallel for
-            for (long i = 0; i < this->rows; ++i) {
-                for (long j = 0; j < other.cols; ++j) {
+            long i, j;
+            #pragma omp parallel for private(i, j)
+            for (i = 0; i < this->rows; ++i) {
+                for (j = 0; j < other.cols; ++j) {
                     unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
                 }
             }
