@@ -8,7 +8,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
    
 ## Is it faster?
-~100 times faster than completely unoptimised barebones python
+~100 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
 Tough luck.
