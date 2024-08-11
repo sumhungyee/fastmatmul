@@ -37,8 +37,8 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 ~325 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
-:cold_sweat:
-(lol maybe at $n \gt 50000$, but currently at $n = 12290$ it's about 25 times slower and for smaller matrices np looks to be even faster. Goes to show how optimised numpy is. I'm happy to welcome more suggestions for optimisations ~~but since I'm not dealing with Cpython and instead Pybind11 there is likely no way I can actually beat np~~)
+:cold_sweat: Tough luck.
+(lol maybe at $n \gt 50000$, but currently at $n = 12290$ it's about 25 times slower than np and for smaller matrices, np looks to be even faster. I'm happy to welcome more suggestions for optimisations ~~but since I'm not dealing with Cpython and instead Pybind11 there is likely no way I can actually beat np~~)
 
 ## Installation
 1. Requirements C++ 14 or after.
