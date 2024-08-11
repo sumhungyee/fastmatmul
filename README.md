@@ -2,9 +2,10 @@
 A project I made while learning cpp. This is a python library for "fast" and efficient matrix multiplication (at least compared to base python)
 
 ## How is it faster?
-1. I use pybind11 and C++ for greater efficiency compared to tortoise-like base python.
+1. I use pybind11 and C++ for greater efficiency compared to tortoise-like base python and trivial operations.
 2. Optimised algorithms like Strassen's for matrix multiplication, instead of $O(n^3)$ stuff, leading to better $O(n^{log_{2}7})$ time complexity.
 3. (Some) CPU parallelisation
+4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in `O(logm)`
    
 ## Is it faster?
 ~100 times faster than completely unoptimised barebones python
@@ -33,3 +34,4 @@ result = a @ Matrix([3, 2, 1]) # Performs a matrix multiplication! Yay!
 sum = mat + mat # +, - and * (hadamard product) work, / not defined.
 pows = mat ** 10 # matrix mult with itself 10 times, optimised
 ```
+
