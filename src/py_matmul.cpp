@@ -14,8 +14,7 @@ https://stackoverflow.com/questions/60745723/pybind11-wrapping-overloaded-assign
 
 namespace py = pybind11;
 template <typename T>
-Matrix::Matrix(const T& list) {
-        
+Matrix::Matrix(const T& list) {   
     this->rows = list.size();
     if (list.empty()) {
         throw std::runtime_error("Matrix must be nonempty");
@@ -27,15 +26,15 @@ Matrix::Matrix(const T& list) {
         return;
     }
 
-    //std::vector<std::vector<double>> matrix_cast = list.cast<std::vector<std::vector<double>>>();
     const auto& matrix_cast = list.cast<std::vector<std::vector<double>>>();
-    
-    
+
     auto first_cast = matrix_cast[0];
     this->cols = first_cast.size();
     this->mat = make_unique<double[]>(rows * cols);
     // copy first row in
     std::copy(first_cast.begin(), first_cast.end(), this->mat.get());
+
+    #pragma omp parallel for
     for (size_t i = 1; i < rows; ++i) {
         auto casted = matrix_cast[i];
         if (casted.size() != this->cols) {
@@ -45,9 +44,6 @@ Matrix::Matrix(const T& list) {
     }
 }
 
-int add(int i, int j) {
-    return i + j;
-}
 
 PYBIND11_MODULE(matmul, m) {
     m.doc() = "A fun module I built while learning cpp, wip"; // still in the works
@@ -78,7 +74,5 @@ PYBIND11_MODULE(matmul, m) {
         .def("__eq__", &Matrix::eq)
         .def("__matmul__", &Matrix::mat_mul)
         .def("__pow__", &Matrix::pow)
-        .def("__get_underlying__", &Matrix::get_array)
-       
-        ;
+        .def("__get_underlying__", &Matrix::get_array);
 }
