@@ -7,7 +7,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 3. (Some) CPU parallelisation
 4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
    - This is done by converting the integer exponent $m$ into binary and storing binary powers of $A$ (i.e. $A^6 = A^{(10)_2}A^{(110)_2}$ ).
-6. Optimised padding for strassen's. Instead of padding to the smallest power of 2, find an integer $m = \left \lceil{\frac{1}{2^n}}\right \rceil$, with $m$ smaller than the threshold, then multiply back.
+6. Optimised padding for strassen's. Instead of padding to the smallest power of 2, find an integer $k$ with $k$ smaller or equal to the threshold, such that for some $m$, $n \leq k2^m$, with $n$ being the maximum of the rows and columns of both matrices engaged in multiplication.
    - i.e. With `#define LARGEMATRIXFORSTRASSEN 64` as the threshold, instead of:
    - ```cpp
      static size_t get_2n(size_t length) {
