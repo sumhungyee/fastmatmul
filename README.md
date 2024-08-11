@@ -23,9 +23,11 @@ A project I made while learning cpp. This is a python library for "fast" and eff
      static size_t get_2n(size_t length) {
             size_t count = 0;
             while (length > LARGEMATRIXFORSTRASSEN) {
+                if ((length & 1) == 1) {
+                    length += 1;
+                }
                 length >>= 1;
-                length += 1;
-                count += 1;
+                count += 1; 
             }
             return length << count;
      }
