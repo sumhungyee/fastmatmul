@@ -10,7 +10,9 @@
 #define DECIMALPLACES 1000000
 #define LARGEMATRIX 53
 #define SMALL 3
-#define LARGEMATRIXFORSTRASSEN 64
+
+#define STRASSEN_POWER 6
+#define LARGEMATRIXFORSTRASSEN 1 << STRASSEN_POWER
 using namespace std;
 
 // https://cs.stackexchange.com/questions/92666/strassen-algorithm-for-unusal-matrices
@@ -24,6 +26,16 @@ class Matrix {
 
         bool is_transposed() const {
             return this->data_is_transposed;
+        }
+
+        static size_t get_2n(size_t length) {
+            size_t count = 0;
+            while (length > LARGEMATRIXFORSTRASSEN) {
+                length >>= 1;
+                length += 1;
+                count += 1;
+            }
+            return length << count;
         }
     
     public:
@@ -368,14 +380,12 @@ class Matrix {
 
     }
 
-    // pads to the smallest power of 2 greater than length
+
+    // instead of padding to the smallest power of 2 greater than length
+    // pad to 2^n * m where m <= LARGEMATRIXFORSTRASSEN
     Matrix pad_matrix_to_2n(size_t length) const {
         // length is greater than this->cols and this->rows
-        size_t result = 1;
-        while (result < length) {
-            result <<= 1;
-        }
-
+        size_t result = Matrix::get_2n(length);
         Matrix padded = Matrix::zeroes(result, result);
 
         #pragma omp parallel for
