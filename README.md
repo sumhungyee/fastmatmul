@@ -6,12 +6,13 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 2. Optimised algorithms like Strassen's for matrix multiplication, instead of $O(n^3)$ stuff, leading to better $O(n^{log_{2}7})$ time complexity.
 3. (Some) CPU parallelisation
 4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
+5. Optimised padding for strassen's. Instead of padding to the smallest power of 2, iteratively find an integer slightly larger than half of itself until that integer is smaller than the threshold, then multiply back.
    
 ## Is it faster?
-~100 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
+~300 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
-Tough luck.
+At large enough sizes, yes! >:) This size probably depends on your computer architecture.
 
 ## Installation
 1. Requirements C++ 14 or after.
