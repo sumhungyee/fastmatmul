@@ -1,5 +1,6 @@
 from timeit import Timer
 from matmul import Matrix
+import numpy as np
 import logging
 import gc
 import random
@@ -34,11 +35,11 @@ def setup_mats():
     setup_mats["pymat_K1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
     setup_mats["pymat_K2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
 
-    setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
-    setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
+    setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(12290)] for j in range(12290)])
+    setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(12290)] for j in range(12290)])
 
-    setup_mats["pymat_L1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
-    setup_mats["pymat_L2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(3290)] for j in range(3290)])
+    setup_mats["npymat_L1"] = np.random.rand(12290, 12290)
+    setup_mats["npymat_L2"] = np.random.rand(12290, 12290)
 
     setup_mats["mat_M"] = Matrix([[0 if i != j else 0.5 for i in range(1290)] for j in range(1290)])
     return setup_mats
@@ -69,14 +70,19 @@ if __name__ == "__main__":
     for ele in timers:
         logger.info(ele.timeit(number=trials) / trials)
     
-    PK1, PK2, PL1, PL2 = m["pymat_K1"], m["pymat_K2"], m["pymat_L1"], m["pymat_L2"]
+    PK1, PK2, NPL1, NPL2 = m["pymat_K1"], m["pymat_K2"], m["npymat_L1"], m["npymat_L2"]
     logger.info("python:")
     pytimers = [
         Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
-        Timer('benchmark_matmul(PL1, PL2)', 'gc.enable()', globals=globals())
     ]
-
     for ele in pytimers:
+        logger.info(ele.timeit(number=trials) / trials)
+    
+    logger.info("numpython:")
+    numpytimers = [
+        Timer('benchmark_matmul(NPL1, NPL2)', 'gc.enable()', globals=globals())
+    ]
+    for ele in numpytimers:
         logger.info(ele.timeit(number=trials) / trials)
     
     
