@@ -7,7 +7,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 3. (Some) CPU parallelisation
    
 ## Is it faster?
-About 90 times faster than base python on my first benchmark of 1 million entries (1000 by 1000).
+~100 times faster than completely unoptimised barebones python
 
 ## Can it beat NumPy?
 Tough luck.
