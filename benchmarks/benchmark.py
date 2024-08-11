@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logger.addHandler(file_handler)
     print("Logger set.")
 
-    trials = 3
+    trials = 10
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
     logger.info("cpp bindings:")

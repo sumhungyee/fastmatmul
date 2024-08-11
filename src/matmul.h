@@ -81,10 +81,8 @@ class Matrix {
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
         #pragma omp parallel for
-        for (long i = 0; i < row; ++i) {
-            for (size_t j = 0; j < col; ++j) {
-                new_mat[i * col + j] = 0;
-            }
+        for (long i = 0; i < entries; ++i) {
+            new_mat[i] = 0;
         }
         return Matrix(row, col, std::move(new_mat));
     }
@@ -380,6 +378,7 @@ class Matrix {
 
         Matrix padded = Matrix::zeroes(result, result);
 
+        #pragma omp parallel for
         for (long e = 0; e < this->rows * this->cols; ++e) {
             long r = e / this->cols;
             long c = e % this->cols;
