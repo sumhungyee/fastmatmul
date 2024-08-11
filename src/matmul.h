@@ -15,6 +15,7 @@ using namespace std;
 
 // https://cs.stackexchange.com/questions/92666/strassen-algorithm-for-unusal-matrices
 // parallelisation thanks to https://github.com/spectre900/Parallel-Strassen-Algorithm/blob/master/omp_strassen.cpp
+// https://ppc.cs.aalto.fi/ch3/nested/#:~:text=Parallelizing%20nested%20loops,need%20most%20of%20the%20time.
 
 class Matrix {
     private:
@@ -379,13 +380,20 @@ class Matrix {
 
         Matrix padded = Matrix::zeroes(result, result);
 
-        long r, c;
-        #pragma omp parallel for private(r, c)
-        for (r = 0; r < this->rows; ++r) {
-            for (c = 0; c < this->cols; ++c) {
-                padded.set_item_inner(r, c, this->get_item_inner(r, c));
-            }
+        for (long e = 0; e < this->rows * this->cols; ++e) {
+            long r = e / this->cols;
+            long c = e % this->cols;
+            padded.set_item_inner(r, c, this->get_item_inner(r, c));
         }
+
+
+        // long r, c;
+        // #pragma omp parallel for private(r, c)
+        // for (r = 0; r < this->rows; ++r) {
+        //     for (c = 0; c < this->cols; ++c) {
+        //         padded.set_item_inner(r, c, this->get_item_inner(r, c));
+        //     }
+        // }
         return padded;
     }
 
@@ -515,14 +523,23 @@ class Matrix {
             Matrix padded_result = strassen(this_padded, other_padded);
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
-
-            long i, j;
-            #pragma omp parallel for private(i, j)
-            for (i = 0; i < this->rows; ++i) {
-                for (j = 0; j < other.cols; ++j) {
-                    unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
-                }
+            
+            
+            #pragma omp parallel for
+            for (long e = 0; e < this->rows * other.cols; ++e) {
+                long i = e / other.cols;
+                long j = e % other.cols;
+                unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
             }
+
+
+            // long i, j;
+            // #pragma omp parallel for private(i, j)
+            // for (i = 0; i < this->rows; ++i) {
+            //     for (j = 0; j < other.cols; ++j) {
+            //         unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
+            //     }
+            // }
 
             return Matrix(this->rows, other.cols, std::move(unpadded));
         }
