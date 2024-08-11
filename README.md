@@ -38,7 +38,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 
 ## Can it beat NumPy?
 :cold_sweat:
-(lol maybe at n > 50000)
+(lol maybe at $n \gt 50000$)
 
 ## Installation
 1. Requirements C++ 14 or after.
