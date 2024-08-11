@@ -5,7 +5,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 1. I use pybind11 and C++ for greater efficiency compared to tortoise-like base python and trivial operations.
 2. Optimised algorithms like Strassen's for matrix multiplication, instead of $O(n^3)$ stuff, leading to better $O(n^{log_{2}7})$ time complexity.
 3. (Some) CPU parallelisation
-4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in `O(logm)`
+4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
    
 ## Is it faster?
 ~100 times faster than completely unoptimised barebones python
