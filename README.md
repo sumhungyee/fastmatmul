@@ -7,6 +7,28 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 3. (Some) CPU parallelisation
 4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
 5. Optimised padding for strassen's. Instead of padding to the smallest power of 2, iteratively find an integer slightly larger than half of itself until that integer is smaller than the threshold, then multiply back.
+   - i.e. With `#define LARGEMATRIXFORSTRASSEN 64` as the threshold, instead of:
+   - ```cpp
+     static size_t get_2n(size_t length) {
+            size_t power = 1;
+            while (power < length) {
+               power <<= 1;
+            }
+            return power;
+     }
+     ```
+   - Do:
+   - ```cpp
+     static size_t get_2n(size_t length) {
+            size_t count = 0;
+            while (length > LARGEMATRIXFORSTRASSEN) {
+                length >>= 1;
+                length += 1;
+                count += 1;
+            }
+            return length << count;
+     }
+     ```
    
 ## Is it faster?
 ~300 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
