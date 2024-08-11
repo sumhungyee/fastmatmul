@@ -37,7 +37,8 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 ~300 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
-At large enough sizes, yes! >:) This size probably depends on your computer architecture.
+:cold_sweat:
+(lol maybe at n > 50000)
 
 ## Installation
 1. Requirements C++ 14 or after.
