@@ -39,6 +39,25 @@ class Matrix {
             }
             return length << count;
         }
+
+        double get_item_inner(size_t r, size_t c) const {
+
+            if (this->is_transposed()) {
+                return mat[c * rows + r];
+            } else {
+                return mat[r * cols + c];
+            }
+        }
+
+        void set_item_inner(size_t r, size_t c, double value) {
+
+            if (this->is_transposed()) {
+                this->mat[c * rows + r] = value;
+            } else {
+                this->mat[r * cols + c] = value;
+            }
+        }
+
     
     public:
         size_t rows, cols;
@@ -127,41 +146,22 @@ class Matrix {
     double get_item(std::tuple<const size_t, const size_t> tup) const {
         size_t r = std::get<0>(tup);
         size_t c = std::get<1>(tup);
+        if (r >= rows || c >= cols) {
+            throw std::out_of_range("Matrix index out of bounds");
+        }
         
         return this->get_item_inner(r, c);
     }
 
-    double get_item_inner(size_t r, size_t c) const {
-            
-        if (r >= rows || c >= cols) {
-            throw std::out_of_range("Matrix index out of bounds");
-        }
-
-        if (this->is_transposed()) {
-            return mat[c * rows + r];
-        } else {
-            return mat[r * cols + c];
-        }
-        
-    }
 
     void set_item(std::tuple<const size_t, const size_t> tup, double value) {
         size_t r = std::get<0>(tup);
         size_t c = std::get<1>(tup);
-
-        this->set_item_inner(r, c, value);
-    }
-
-    void set_item_inner(size_t r, size_t c, double value) {
         if (r >= rows || c >= cols) {
             throw std::out_of_range("Matrix index out of bounds");
         }
 
-        if (this->is_transposed()) {
-            this->mat[c * rows + r] = value;
-        } else {
-            this->mat[r * cols + c] = value;
-        }
+        this->set_item_inner(r, c, value);
     }
 
 
@@ -481,25 +481,25 @@ class Matrix {
         {
             #pragma omp single
             {
-                #pragma omp task
+                #pragma omp task shared(P1)
                 P1 = Matrix::strassen(Matrix::add(A, D), Matrix::add(E, H));
 
-                #pragma omp task
+                #pragma omp task shared(P2)
                 P2 = Matrix::strassen(D, Matrix::sub(G, E));
 
-                #pragma omp task 
+                #pragma omp task shared(P3) 
                 P3 = Matrix::strassen(Matrix::add(A, B), H);
 
-                #pragma omp task
+                #pragma omp task shared(P4)
                 P4 = Matrix::strassen(Matrix::sub(B, D), Matrix::add(G, H));
 
-                #pragma omp task 
+                #pragma omp task shared(P5) 
                 P5 = Matrix::strassen(A, Matrix::sub(F, H));
 
-                #pragma omp task
+                #pragma omp task shared(P6)
                 P6 = Matrix::strassen(Matrix::add(C, D), E);
 
-                #pragma omp task
+                #pragma omp task shared(P7)
                 P7 = Matrix::strassen(Matrix::sub(A, C), Matrix::add(E, F));
                 #pragma omp taskwait
             }
