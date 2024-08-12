@@ -34,7 +34,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
    - This is done by converting the integer exponent $m$ into binary and performing multiplication by iterating over powers of $A$ (i.e. $A^6 = A^{(10)_2}A^{(110)_2}$ ).
 
 ## Is it faster?
-~325 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
+~500 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
 ## Can it beat NumPy?
 :cold_sweat: Tough luck.
