@@ -108,7 +108,7 @@ def test_matmul(setup_mats):
 
 def test_matmul_2(setup_mats):
     J = setup_mats["mat_J"]
-    assert Matrix([[1, -2], [2, -4], [0, 8]]) @ Matrix([[5, 2, 1], [2, 0, 0]])\
+    assert Matrix([[1, 2, 0], [-2, -4, 8]]).T().copy() @ Matrix([[5, 2, 1], [2, 0, 0]])\
           == Matrix([[1 , 2, 1], [2, 4, 2], [16, 0, 0]])
     L = J @ J
     assert L.dims() == J.dims()

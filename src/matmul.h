@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <assert.h>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -40,9 +41,18 @@ class Matrix {
             return length << count;
         }
 
+        // used to skip transpose checks i.e. matrix just created.
+        void set_item_inner_assume_no_t(size_t r, size_t c, double value) {
+            this->mat[r * cols + c] = value;
+        }
+
+        double get_item_inner_assume_no_t(size_t r, size_t c) const {
+            return mat[r * cols + c]; 
+        }
+
         double get_item_inner(size_t r, size_t c) const {
 
-            if (this->is_transposed()) {
+            if (this->data_is_transposed) { // reduce overhead
                 return mat[c * rows + r];
             } else {
                 return mat[r * cols + c];
@@ -51,7 +61,7 @@ class Matrix {
 
         void set_item_inner(size_t r, size_t c, double value) {
 
-            if (this->is_transposed()) {
+            if (this->data_is_transposed) { // reduce overhead
                 this->mat[c * rows + r] = value;
             } else {
                 this->mat[r * cols + c] = value;
@@ -347,7 +357,6 @@ class Matrix {
     bool eq(const Matrix& other) {
         if (this->rows == other.rows && this->cols == other.cols) {
             size_t entries = rows * cols;
-            //unique_ptr<double[]> new_mat = make_unique<double[]>(entries);
 
             for (long i = 0; i < rows; ++i) {
                 for (long j = 0; j < cols; ++j) {
@@ -394,34 +403,32 @@ class Matrix {
         for (long e = 0; e < this->rows * this->cols; ++e) {
             long r = e / this->cols;
             long c = e % this->cols;
-            padded.set_item_inner(r, c, this->get_item_inner(r, c));
+            padded.set_item_inner_assume_no_t(r, c, this->get_item_inner(r, c));
         }
-
-
-        // long r, c;
-        // #pragma omp parallel for private(r, c)
-        // for (r = 0; r < this->rows; ++r) {
-        //     for (c = 0; c < this->cols; ++c) {
-        //         padded.set_item_inner(r, c, this->get_item_inner(r, c));
-        //     }
-        // }
+        // padded is guaranteed to be untransposed
+        assert(!padded.is_transposed());
         return padded;
     }
 
     // static method, must be padded to square matrix
     static std::tuple<Matrix, Matrix, Matrix, Matrix> get_quadrants(const Matrix& padded) {
+        // padded is guaranteed to be untransposed
         size_t length = padded.rows >> 1; // 2 * length == this->cols;
-        unique_ptr<double[]> mat_1 = std::make_unique<double[]>(length * length);
-        unique_ptr<double[]> mat_2 = std::make_unique<double[]>(length * length);
-        unique_ptr<double[]> mat_3 = std::make_unique<double[]>(length * length);
-        unique_ptr<double[]> mat_4 = std::make_unique<double[]>(length * length);
-        
+        size_t dims = length * length;
+        unique_ptr<double[]> mat_1 = std::make_unique<double[]>(dims);
+        unique_ptr<double[]> mat_2 = std::make_unique<double[]>(dims);
+        unique_ptr<double[]> mat_3 = std::make_unique<double[]>(dims);
+        unique_ptr<double[]> mat_4 = std::make_unique<double[]>(dims);
+
+        size_t location;
         for (long i = 0; i < length; ++i) {
             for (long j = 0; j < length; ++j) {
-                mat_1[i * length + j] = padded.get_item_inner(i, j);
-                mat_2[i * length + j] = padded.get_item_inner(i, j + length);
-                mat_3[i * length + j] = padded.get_item_inner(i + length, j);
-                mat_4[i * length + j] = padded.get_item_inner(i + length, j + length);
+                // reduce overhead with needless checks
+                location = i * length + j;
+                mat_1[location] = padded.get_item_inner_assume_no_t(i, j);
+                mat_2[location] = padded.get_item_inner_assume_no_t(i, j + length);
+                mat_3[location] = padded.get_item_inner_assume_no_t(i + length, j);
+                mat_4[location] = padded.get_item_inner_assume_no_t(i + length, j + length);
             }
         }
 
@@ -535,22 +542,12 @@ class Matrix {
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
             
-            
             #pragma omp parallel for
             for (long e = 0; e < this->rows * other.cols; ++e) {
                 long i = e / other.cols;
                 long j = e % other.cols;
-                unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
+                unpadded[i * other.cols + j] = padded_result.get_item_inner_assume_no_t(i, j);
             }
-
-
-            // long i, j;
-            // #pragma omp parallel for private(i, j)
-            // for (i = 0; i < this->rows; ++i) {
-            //     for (j = 0; j < other.cols; ++j) {
-            //         unpadded[i * other.cols + j] = padded_result.get_item_inner(i, j);
-            //     }
-            // }
 
             return Matrix(this->rows, other.cols, std::move(unpadded));
         }
