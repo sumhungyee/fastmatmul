@@ -5,9 +5,7 @@ A project I made while learning cpp. This is a python library for "fast" and eff
 1. I use pybind11 and C++ for greater efficiency compared to tortoise-like base python and trivial operations.
 2. Optimised algorithms like Strassen's for matrix multiplication instead of $O(n^3)$ multiplication, leading to better $O(n^{log_{2}7})$ time complexity.
 3. (Some) CPU parallelisation
-4. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
-   - This is done by converting the integer exponent $m$ into binary and performing multiplication by iterating over powers of $A$ (i.e. $A^6 = A^{(10)_2}A^{(110)_2}$ ).
-6. Optimised padding for strassen's. Instead of padding to the smallest power of 2, find an integer $k$ with $k$ smaller or equal to the threshold, such that for some $m \in \mathbb{n}$, we have $n \leq k2^m$, with $n$ being the maximum of the rows and columns of both matrices engaged in multiplication.
+4. Optimised padding for strassen's. Instead of padding to the smallest power of 2, find an integer $k$ with $k$ smaller or equal to the threshold, such that for some $m \in \mathbb{N}$, we have $n \leq k2^m$, with $n$ being the maximum of the rows and columns of both matrices engaged in multiplication.
    - i.e. With `#define LARGEMATRIXFORSTRASSEN 64` as the threshold, instead of:
    - ```cpp
      static size_t get_2n(size_t length) {
@@ -32,7 +30,9 @@ A project I made while learning cpp. This is a python library for "fast" and eff
             return length << count;
      }
      ```
-   
+5. Power operations: for a fixed size matrix $A$, power operations $A^m$, $m \in \mathbb{N}$ are performed in $O(logm)$ time.
+   - This is done by converting the integer exponent $m$ into binary and performing multiplication by iterating over powers of $A$ (i.e. $A^6 = A^{(10)_2}A^{(110)_2}$ ).
+
 ## Is it faster?
 ~325 times faster than completely unoptimised barebones python for semi-large (1000 x 1000) matrices
 
