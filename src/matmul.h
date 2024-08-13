@@ -261,17 +261,14 @@ class Matrix {
     // ADDING MATRICES
 
     static Matrix fastadd(const Matrix& curr, const Matrix& other) {
-        // removes checks, to be used only in strassens
+        // removes checks and assume untranspose, to be used only in strassens
         const size_t rows = curr.rows;
         const size_t cols = curr.cols;
         const size_t entries = rows * cols;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
-        size_t r, c;
         for (size_t i = 0; i < entries; ++i) {
-            r = i / cols;
-            c = i % cols;
             // matrices guaranteed to not be transposed due to padding
-            new_mat[r * cols + c] = curr.mat[r * cols + c] + other.mat[r * cols + c];
+            new_mat[i] = curr.mat[i] + other.mat[i];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -323,11 +320,9 @@ class Matrix {
         const size_t cols = curr.cols;
         const size_t entries = rows * cols;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
-        size_t r, c;
+ 
         for (size_t i = 0; i < entries; ++i) {
-            r = i / cols;
-            c = i % cols;
-            new_mat[r * curr.cols + c] = curr.mat[r * cols + c] - other.mat[r * cols + c];
+            new_mat[i] = curr.mat[i] - other.mat[i];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -447,16 +442,18 @@ class Matrix {
         unique_ptr<double[]> mat_3 = std::make_unique<double[]>(dims);
         unique_ptr<double[]> mat_4 = std::make_unique<double[]>(dims);
 
-        size_t location;
+        size_t location, value1, value2;
         for (long i = 0; i < length; ++i) {
             for (long j = 0; j < length; ++j) {
                 // reduce overhead with needless checks
                 location = i * length + j;
+                value1 = i * padded.cols + j;
+                value2 = (i + length) * padded.cols + j;
                 // due to padding from strassens, matrix is guaranteed to not be transposed
-                mat_1[location] = padded.mat[i * padded.cols + j];
-                mat_2[location] = padded.mat[i * padded.cols + j + length];
-                mat_3[location] = padded.mat[(i + length) * padded.cols + j];
-                mat_4[location] = padded.mat[(i + length) * padded.cols + j + length];
+                mat_1[location] = padded.mat[value1];
+                mat_2[location] = padded.mat[value1 + length];
+                mat_3[location] = padded.mat[value2];
+                mat_4[location] = padded.mat[value2 + length];
             }
         }
 
@@ -474,18 +471,19 @@ class Matrix {
         const size_t desired = 2 * length;
         unique_ptr<double[]> combined = std::make_unique<double[]>(desired * desired);
 
+        // again, guaranteed untransposed
+        // return mat[r * cols + c];
         for (long r = 0; r < desired; ++r) {
             for (long c = 0; c < desired; ++c) {
                 if (r < length && c < length) {
-                    combined[r * desired + c] = C11.get_item_inner(r, c);
+                    combined[r * desired + c] = C11.mat[r * length + c];
                 } else if (r < length) {
-                    combined[r * desired + c] = C12.get_item_inner(r, c - length);
+                    combined[r * desired + c] = C12.mat[r * length + c - length];
                 } else if (c < length) {
-                    combined[r * desired + c] = C21.get_item_inner(r - length, c);
+                    combined[r * desired + c] = C21.mat[(r - length) * length + c];
                 } else {
-                    combined[r * desired + c] = C22.get_item_inner(r - length, c - length);
+                    combined[r * desired + c] = C22.mat[(r - length) * length + c - length];
                 }
-                
             }
         }
         return Matrix(desired, desired, std::move(combined));
