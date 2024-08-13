@@ -265,7 +265,7 @@ class Matrix {
     // ADDING MATRICES
 
     static Matrix fastadd(const Matrix& curr, const Matrix& other) {
-        // removes checks, to be used in strassens
+        // removes checks, to be used only in strassens
         const size_t rows = curr.rows;
         const size_t cols = curr.cols;
         const size_t entries = rows * cols;
@@ -274,7 +274,8 @@ class Matrix {
         for (size_t i = 0; i < entries; ++i) {
             r = i / cols;
             c = i % cols;
-            new_mat[r * curr.cols + c] = curr.get_item_inner_assume_no_t(r, c) + other.get_item_inner_assume_no_t(r, c);
+            // matrices guaranteed to not be transposed due to padding
+            new_mat[r * cols + c] = curr.mat[r * cols + c] + other.mat[r * cols + c];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -330,7 +331,7 @@ class Matrix {
         for (size_t i = 0; i < entries; ++i) {
             r = i / cols;
             c = i % cols;
-            new_mat[r * curr.cols + c] = curr.get_item_inner_assume_no_t(r, c) - other.get_item_inner_assume_no_t(r, c);
+            new_mat[r * curr.cols + c] = curr.mat[r * cols + c] - other.mat[r * cols + c];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -454,10 +455,11 @@ class Matrix {
             for (long j = 0; j < length; ++j) {
                 // reduce overhead with needless checks
                 location = i * length + j;
-                mat_1[location] = padded.get_item_inner_assume_no_t(i, j);
-                mat_2[location] = padded.get_item_inner_assume_no_t(i, j + length);
-                mat_3[location] = padded.get_item_inner_assume_no_t(i + length, j);
-                mat_4[location] = padded.get_item_inner_assume_no_t(i + length, j + length);
+                // due to padding from strassens, matrix is guaranteed to not be transposed
+                mat_1[location] = padded.mat[i * padded.cols + j];
+                mat_2[location] = padded.mat[i * padded.cols + j + length];
+                mat_3[location] = padded.mat[(i + length) * padded.cols + j];
+                mat_4[location] = padded.mat[(i + length) * padded.cols + j + length];
             }
         }
 
