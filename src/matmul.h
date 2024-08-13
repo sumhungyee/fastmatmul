@@ -101,7 +101,7 @@ class Matrix {
         size_t entries = row * col;
         unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
 
-        #pragma omp parallel for
+        #pragma omp parallel for shared(new_mat)
         for (long i = 0; i < row; ++i) {
             for (long j = 0; j < col; ++j) {
                 if (i == j) {

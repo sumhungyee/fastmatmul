@@ -46,8 +46,6 @@ def setup_mats():
     return setup_mats
 
 
-def benchmark_matmul(mat1, mat2):
-    return mat1 @ mat2
 
 if __name__ == "__main__":
     
@@ -60,13 +58,13 @@ if __name__ == "__main__":
     logger.addHandler(file_handler)
     print("Logger set.")
 
-    trials = 10
+    trials = 100
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
     logger.info("cpp bindings:")
     timers = [
-        Timer('benchmark_matmul(K1, K2)', 'gc.enable()', globals=globals()),
-        Timer('benchmark_matmul(L1, L2)', 'gc.enable()', globals=globals())
+        Timer('K1 @ K2', 'gc.enable()', globals=globals()),
+        Timer('L1 @ L2', 'gc.enable()', globals=globals())
     ]
     for ele in timers:
         logger.info(ele.timeit(number=trials) / trials)
@@ -74,14 +72,14 @@ if __name__ == "__main__":
     PK1, PK2, NPL1, NPL2 = m["pymat_K1"], m["pymat_K2"], m["npymat_L1"], m["npymat_L2"]
     logger.info("python:")
     pytimers = [
-        Timer('benchmark_matmul(PK1, PK2)', 'gc.enable()', globals=globals()),
+        Timer('PK1 @ PK2', 'gc.enable()', globals=globals()),
     ]
     for ele in pytimers:
         logger.info(ele.timeit(number=trials) / trials)
     
     logger.info("numpython:")
     numpytimers = [
-        Timer('benchmark_matmul(NPL1, NPL2)', 'gc.enable()', globals=globals())
+        Timer('NPL1 @ NPL2', 'gc.enable()', globals=globals())
     ]
     for ele in numpytimers:
         logger.info(ele.timeit(number=trials) / trials)
