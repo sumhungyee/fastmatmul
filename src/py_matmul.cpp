@@ -74,5 +74,5 @@ PYBIND11_MODULE(matmul, m) {
         .def("__eq__", &Matrix::eq)
         .def("__matmul__", &Matrix::mat_mul)
         .def("__pow__", &Matrix::pow)
-        .def("__get_underlying__", &Matrix::get_array);
+        .def("__underlying__", &Matrix::get_array);
 }

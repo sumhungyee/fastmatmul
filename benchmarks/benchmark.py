@@ -35,7 +35,7 @@ def setup_mats():
     setup_mats["pymat_K1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
     setup_mats["pymat_K2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
 
-    e = 1290
+    e = 12290
     setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(e)] for j in range(e)])
     setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(e)] for j in range(e)])
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     logger.addHandler(file_handler)
     print("Logger set.")
 
-    trials = 500
+    trials = 10
     m = setup_mats()
     K1, K2, L1, L2, M = m["mat_K1"], m["mat_K2"], m["mat_L1"], m["mat_L2"], m["mat_M"]
     logger.info("cpp bindings:")

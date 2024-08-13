@@ -46,10 +46,6 @@ class Matrix {
             this->mat[r * cols + c] = value;
         }
 
-        double get_item_inner_assume_no_t(size_t r, size_t c) const {
-            return mat[r * cols + c]; 
-        }
-
         double get_item_inner(size_t r, size_t c) const {
 
             if (this->data_is_transposed) { // reduce overhead
@@ -265,7 +261,7 @@ class Matrix {
     // ADDING MATRICES
 
     static Matrix fastadd(const Matrix& curr, const Matrix& other) {
-        // removes checks, to be used in strassens
+        // removes checks, to be used only in strassens
         const size_t rows = curr.rows;
         const size_t cols = curr.cols;
         const size_t entries = rows * cols;
@@ -274,7 +270,8 @@ class Matrix {
         for (size_t i = 0; i < entries; ++i) {
             r = i / cols;
             c = i % cols;
-            new_mat[r * curr.cols + c] = curr.get_item_inner_assume_no_t(r, c) + other.get_item_inner_assume_no_t(r, c);
+            // matrices guaranteed to not be transposed due to padding
+            new_mat[r * cols + c] = curr.mat[r * cols + c] + other.mat[r * cols + c];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -330,7 +327,7 @@ class Matrix {
         for (size_t i = 0; i < entries; ++i) {
             r = i / cols;
             c = i % cols;
-            new_mat[r * curr.cols + c] = curr.get_item_inner_assume_no_t(r, c) - other.get_item_inner_assume_no_t(r, c);
+            new_mat[r * curr.cols + c] = curr.mat[r * cols + c] - other.mat[r * cols + c];
         }
         return Matrix(rows, cols, std::move(new_mat));
     }
@@ -432,6 +429,7 @@ class Matrix {
         for (long e = 0; e < this->rows * this->cols; ++e) {
             long r = e / this->cols;
             long c = e % this->cols;
+            // padded is untransposed
             padded.set_item_inner_assume_no_t(r, c, this->get_item_inner(r, c));
         }
         // padded is guaranteed to be untransposed
@@ -454,10 +452,11 @@ class Matrix {
             for (long j = 0; j < length; ++j) {
                 // reduce overhead with needless checks
                 location = i * length + j;
-                mat_1[location] = padded.get_item_inner_assume_no_t(i, j);
-                mat_2[location] = padded.get_item_inner_assume_no_t(i, j + length);
-                mat_3[location] = padded.get_item_inner_assume_no_t(i + length, j);
-                mat_4[location] = padded.get_item_inner_assume_no_t(i + length, j + length);
+                // due to padding from strassens, matrix is guaranteed to not be transposed
+                mat_1[location] = padded.mat[i * padded.cols + j];
+                mat_2[location] = padded.mat[i * padded.cols + j + length];
+                mat_3[location] = padded.mat[(i + length) * padded.cols + j];
+                mat_4[location] = padded.mat[(i + length) * padded.cols + j + length];
             }
         }
 
@@ -575,7 +574,7 @@ class Matrix {
             for (long e = 0; e < this->rows * other.cols; ++e) {
                 long i = e / other.cols;
                 long j = e % other.cols;
-                unpadded[i * other.cols + j] = padded_result.get_item_inner_assume_no_t(i, j);
+                unpadded[i * other.cols + j] = padded_result.mat[i * padded_result.cols + j]; //guaranteed untransposed
             }
 
             return Matrix(this->rows, other.cols, std::move(unpadded));
