@@ -1,5 +1,7 @@
 import pytest
 import random
+import copy
+import numpy as np
 from matmul import Matrix
 
 @pytest.fixture(scope="function")
@@ -123,8 +125,19 @@ def test_matmul_large(setup_mats):
         assert J[i, 0] == 1290
     
 def test_generic(setup_mats):
-    M = setup_mats["mat_M"]
-    assert M ** 2 + 0.75 * Matrix.identity(1290) == Matrix.identity(1290)
+    for i in range(10):
+        size = random.randint(64, 128)
+        lsofls = [[random.randint(-10, 10) for _ in range(size)] for _ in range(size)]
+        lsofls2 = [[random.randint(-10, 10) for _ in range(size)] for _ in range(size)]
+        
+        for _ in range(100):
+            # Remember .T() modifies A and B
+            A = Matrix(lsofls).T()
+            B = Matrix(lsofls2)
+            NA = np.array(lsofls).T
+            NB = np.array(lsofls2)
+            i, j = random.randint(0, size - 1), random.randint(0, size - 1)
+            assert (A @ B.T())[i, j] == (NA @ NB.T)[i, j]
 
     
 
