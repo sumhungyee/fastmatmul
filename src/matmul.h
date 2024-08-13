@@ -46,10 +46,6 @@ class Matrix {
             this->mat[r * cols + c] = value;
         }
 
-        double get_item_inner_assume_no_t(size_t r, size_t c) const {
-            return mat[r * cols + c]; 
-        }
-
         double get_item_inner(size_t r, size_t c) const {
 
             if (this->data_is_transposed) { // reduce overhead
@@ -433,6 +429,7 @@ class Matrix {
         for (long e = 0; e < this->rows * this->cols; ++e) {
             long r = e / this->cols;
             long c = e % this->cols;
+            // padded is untransposed
             padded.set_item_inner_assume_no_t(r, c, this->get_item_inner(r, c));
         }
         // padded is guaranteed to be untransposed
@@ -577,7 +574,7 @@ class Matrix {
             for (long e = 0; e < this->rows * other.cols; ++e) {
                 long i = e / other.cols;
                 long j = e % other.cols;
-                unpadded[i * other.cols + j] = padded_result.get_item_inner_assume_no_t(i, j);
+                unpadded[i * other.cols + j] = padded_result.mat[i * padded_result.cols + j]; //guaranteed untransposed
             }
 
             return Matrix(this->rows, other.cols, std::move(unpadded));
