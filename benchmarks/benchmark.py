@@ -35,7 +35,7 @@ def setup_mats():
     setup_mats["pymat_K1"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
     setup_mats["pymat_K2"] = PyTestMatrix([[random.uniform(-10, 10) for i in range(1290)] for j in range(1290)])
 
-    e = 12290
+    e = 4096
     setup_mats["mat_L1"] = Matrix([[random.uniform(-10, 10) for i in range(e)] for j in range(e)])
     setup_mats["mat_L2"] = Matrix([[random.uniform(-10, 10) for i in range(e)] for j in range(e)])
 
