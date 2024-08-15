@@ -506,19 +506,6 @@ class Matrix {
         Matrix result1(halved_dim, halved_dim);
         Matrix result2(halved_dim, halved_dim);
 
-        // Matrix result3(halved_dim, halved_dim);
-        // Matrix result4(halved_dim, halved_dim);
-
-        // Matrix result5(halved_dim, halved_dim);
-        // Matrix result6(halved_dim, halved_dim);
-
-        // Matrix result7(halved_dim, halved_dim);
-        // Matrix result8(halved_dim, halved_dim);
-
-        // Matrix result9(halved_dim, halved_dim);
-        // Matrix result10(halved_dim, halved_dim);
-
-
         #pragma omp parallel
         {
             #pragma omp single

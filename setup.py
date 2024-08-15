@@ -14,7 +14,7 @@ ext_modules = [
 
 setup(
     name='matmul',
-    version='0.1.0',
+    version='0.1.1',
     install_requires=[
         'requests',
         'importlib-metadata; python_version<"3.10"',
