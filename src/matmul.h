@@ -481,6 +481,8 @@ class Matrix {
     }
     // static method, must be padded
     static Matrix strassen(const Matrix& a_padded, const Matrix& b_padded) {
+        // this function was changed to reduce copies made. instead, fast_add and
+        // fast_sub now take in a scratch matrix which can be edited.
         if (a_padded.rows < LARGEMATRIXFORSTRASSEN) {
             return a_padded.mat_mul_default(b_padded);
         }
@@ -499,60 +501,85 @@ class Matrix {
 
         Matrix P1, P2, P3, P4, P5, P6, P7;
 
-        size_t halved_dim = a_padded.rows / 2;
+        size_t halved_dim = a_padded.rows >> 1;
 
         Matrix result1(halved_dim, halved_dim);
         Matrix result2(halved_dim, halved_dim);
 
-        Matrix result3(halved_dim, halved_dim);
-        Matrix result4(halved_dim, halved_dim);
+        // Matrix result3(halved_dim, halved_dim);
+        // Matrix result4(halved_dim, halved_dim);
 
-        Matrix result5(halved_dim, halved_dim);
-        Matrix result6(halved_dim, halved_dim);
+        // Matrix result5(halved_dim, halved_dim);
+        // Matrix result6(halved_dim, halved_dim);
 
-        Matrix result7(halved_dim, halved_dim);
-        Matrix result8(halved_dim, halved_dim);
+        // Matrix result7(halved_dim, halved_dim);
+        // Matrix result8(halved_dim, halved_dim);
 
-        Matrix result9(halved_dim, halved_dim);
-        Matrix result10(halved_dim, halved_dim);
+        // Matrix result9(halved_dim, halved_dim);
+        // Matrix result10(halved_dim, halved_dim);
 
-        Matrix result11(halved_dim, halved_dim);
-        Matrix result12(halved_dim, halved_dim);
 
         #pragma omp parallel
         {
             #pragma omp single
             {
                 #pragma omp task shared(P1)
-                Matrix::fastadd(A, D, result1);
-                Matrix::fastadd(E, H, result2);
-                P1 = Matrix::strassen(result1, result2);
+                {
+                    Matrix::fastadd(A, D, result1);
+                    Matrix::fastadd(E, H, result2);
+                    P1 = Matrix::strassen(result1, result2);
+                }
+                
 
                 #pragma omp task shared(P2)
-                Matrix::fastsub(G, E, result3);
-                P2 = Matrix::strassen(D, result3);
+                {
+                    Matrix result3(halved_dim, halved_dim);
+                    Matrix::fastsub(G, E, result3);
+                    P2 = Matrix::strassen(D, result3);
+                }
+                
 
                 #pragma omp task shared(P3) 
-                Matrix::fastadd(A, B, result4);
-                P3 = Matrix::strassen(result4, H);
+                {
+                    Matrix result4(halved_dim, halved_dim);
+                    Matrix::fastadd(A, B, result4);
+                    P3 = Matrix::strassen(result4, H);
+                }
+                
 
                 #pragma omp task shared(P4)
-                Matrix::fastsub(B, D, result5);
-                Matrix::fastadd(G, H, result6);
-                P4 = Matrix::strassen(result5, result6);
+                {
+                    Matrix result5(halved_dim, halved_dim);
+                    Matrix result6(halved_dim, halved_dim);
+                    Matrix::fastsub(B, D, result5);
+                    Matrix::fastadd(G, H, result6);
+                    P4 = Matrix::strassen(result5, result6);
+                }
+                
 
-                #pragma omp task shared(P5) 
-                Matrix::fastsub(F, H, result7);
-                P5 = Matrix::strassen(A, result7);
+                #pragma omp task shared(P5)
+                {
+                    Matrix result7(halved_dim, halved_dim);
+                    Matrix::fastsub(F, H, result7);
+                    P5 = Matrix::strassen(A, result7);
+                }
 
                 #pragma omp task shared(P6)
-                Matrix::fastadd(C, D, result8);
-                P6 = Matrix::strassen(result8, E);
+                {
+                    Matrix result8(halved_dim, halved_dim);
+                    Matrix::fastadd(C, D, result8);
+                    P6 = Matrix::strassen(result8, E);
+                }
+                
 
                 #pragma omp task shared(P7)
-                Matrix::fastsub(A, C, result9);
-                Matrix::fastadd(E, F, result10);
-                P7 = Matrix::strassen(result9, result10);
+                {
+                    Matrix result9(halved_dim, halved_dim);
+                    Matrix result10(halved_dim, halved_dim);
+                    Matrix::fastsub(A, C, result9);
+                    Matrix::fastadd(E, F, result10);
+                    P7 = Matrix::strassen(result9, result10);
+                }
                 
                 #pragma omp taskwait
             }
@@ -563,17 +590,17 @@ class Matrix {
         Matrix C21(halved_dim, halved_dim);
         Matrix C22(halved_dim, halved_dim);
 
-        Matrix::fastadd(P1, P2, result11);
-        Matrix::fastsub(P4, P3, result12);
-        Matrix::fastadd(result11, result12, C11);
+        Matrix::fastadd(P1, P2, result1);
+        Matrix::fastsub(P4, P3, result2);
+        Matrix::fastadd(result1, result2, C11);
 
         Matrix::fastadd(P5, P3, C12);
 
         Matrix::fastadd(P2, P6, C21);
 
-        Matrix::fastadd(P1, P5, result11);
-        Matrix::fastadd(P6, P7, result12);
-        Matrix::fastsub(result11, result12, C22);
+        Matrix::fastadd(P1, P5, result1);
+        Matrix::fastadd(P6, P7, result2);
+        Matrix::fastsub(result1, result2, C22);
 
         // combine
         return Matrix::combine(C11, C12, C21, C22);
