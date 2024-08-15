@@ -503,14 +503,21 @@ class Matrix {
 
         Matrix result1(halved_dim, halved_dim);
         Matrix result2(halved_dim, halved_dim);
+
         Matrix result3(halved_dim, halved_dim);
         Matrix result4(halved_dim, halved_dim);
+
         Matrix result5(halved_dim, halved_dim);
         Matrix result6(halved_dim, halved_dim);
+
         Matrix result7(halved_dim, halved_dim);
         Matrix result8(halved_dim, halved_dim);
+
         Matrix result9(halved_dim, halved_dim);
         Matrix result10(halved_dim, halved_dim);
+
+        Matrix result11(halved_dim, halved_dim);
+        Matrix result12(halved_dim, halved_dim);
 
         #pragma omp parallel
         {
@@ -556,17 +563,17 @@ class Matrix {
         Matrix C21(halved_dim, halved_dim);
         Matrix C22(halved_dim, halved_dim);
 
-        Matrix::fastadd(P1, P2, result1);
-        Matrix::fastsub(P4, P3, result2);
-        Matrix::fastadd(result1, result2, C11);
+        Matrix::fastadd(P1, P2, result11);
+        Matrix::fastsub(P4, P3, result12);
+        Matrix::fastadd(result11, result12, C11);
 
         Matrix::fastadd(P5, P3, C12);
 
         Matrix::fastadd(P2, P6, C21);
 
-        Matrix::fastadd(P1, P5, result1);
-        Matrix::fastadd(P6, P7, result2);
-        Matrix::fastsub(result1, result2, C22);
+        Matrix::fastadd(P1, P5, result11);
+        Matrix::fastadd(P6, P7, result12);
+        Matrix::fastsub(result11, result12, C22);
 
         // combine
         return Matrix::combine(C11, C12, C21, C22);
