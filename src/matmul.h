@@ -481,7 +481,6 @@ class Matrix {
     }
     // static method, must be padded
     static Matrix strassen(const Matrix& a_padded, const Matrix& b_padded) {
-        // https://gist.github.com/syphh/1cb6b9bb57a400873fa9d05cd1ee7cc3
         if (a_padded.rows < LARGEMATRIXFORSTRASSEN) {
             return a_padded.mat_mul_default(b_padded);
         }
@@ -492,8 +491,7 @@ class Matrix {
         const Matrix& B = std::get<1>(tuple_1);
         const Matrix& C = std::get<2>(tuple_1);
         const Matrix& D = std::get<3>(tuple_1);
-        // const auto& [A, B, C, D] = tuple_1; // but im not using C++ 17
-        
+
         const Matrix& E = std::get<0>(tuple_2);
         const Matrix& F = std::get<1>(tuple_2);
         const Matrix& G = std::get<2>(tuple_2);
@@ -501,18 +499,18 @@ class Matrix {
 
         Matrix P1, P2, P3, P4, P5, P6, P7;
 
-        size_t halved_dim = a_padded.rows > 1;
+        size_t halved_dim = a_padded.rows / 2;
 
-        Matrix result1(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result2(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result3(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result4(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result5(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result6(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result7(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result8(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result9(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
-        Matrix result10(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result1(halved_dim, halved_dim);
+        Matrix result2(halved_dim, halved_dim);
+        Matrix result3(halved_dim, halved_dim);
+        Matrix result4(halved_dim, halved_dim);
+        Matrix result5(halved_dim, halved_dim);
+        Matrix result6(halved_dim, halved_dim);
+        Matrix result7(halved_dim, halved_dim);
+        Matrix result8(halved_dim, halved_dim);
+        Matrix result9(halved_dim, halved_dim);
+        Matrix result10(halved_dim, halved_dim);
 
         #pragma omp parallel
         {
@@ -521,53 +519,54 @@ class Matrix {
                 #pragma omp task shared(P1)
                 Matrix::fastadd(A, D, result1);
                 Matrix::fastadd(E, H, result2);
-                P1 = Matrix::strassen(result1.copy(), result2.copy());
+                P1 = Matrix::strassen(result1, result2);
 
                 #pragma omp task shared(P2)
                 Matrix::fastsub(G, E, result3);
-                P2 = Matrix::strassen(D, result3.copy());
+                P2 = Matrix::strassen(D, result3);
 
                 #pragma omp task shared(P3) 
                 Matrix::fastadd(A, B, result4);
-                P3 = Matrix::strassen(result4.copy(), H);
+                P3 = Matrix::strassen(result4, H);
 
                 #pragma omp task shared(P4)
                 Matrix::fastsub(B, D, result5);
                 Matrix::fastadd(G, H, result6);
-                P4 = Matrix::strassen(result5.copy(), result6.copy());
+                P4 = Matrix::strassen(result5, result6);
 
                 #pragma omp task shared(P5) 
                 Matrix::fastsub(F, H, result7);
-                P5 = Matrix::strassen(A, result7.copy());
+                P5 = Matrix::strassen(A, result7);
 
                 #pragma omp task shared(P6)
                 Matrix::fastadd(C, D, result8);
-                P6 = Matrix::strassen(result8.copy(), E);
+                P6 = Matrix::strassen(result8, E);
 
                 #pragma omp task shared(P7)
                 Matrix::fastsub(A, C, result9);
                 Matrix::fastadd(E, F, result10);
-                P7 = Matrix::strassen(result9.copy(), result10.copy());
+                P7 = Matrix::strassen(result9, result10);
                 
                 #pragma omp taskwait
             }
-            
         }
+
+        Matrix C11(halved_dim, halved_dim);
+        Matrix C12(halved_dim, halved_dim);
+        Matrix C21(halved_dim, halved_dim);
+        Matrix C22(halved_dim, halved_dim);
+
         Matrix::fastadd(P1, P2, result1);
         Matrix::fastsub(P4, P3, result2);
-        Matrix::fastadd(result1, result2, result3);
-        const Matrix& C11 = result3.copy();
-        
-        Matrix::fastadd(P5, P3, result3);
-        const Matrix& C12 = result3.copy();
+        Matrix::fastadd(result1, result2, C11);
 
-        Matrix::fastadd(P2, P6, result3);
-        const Matrix& C21 = result3.copy();
+        Matrix::fastadd(P5, P3, C12);
+
+        Matrix::fastadd(P2, P6, C21);
 
         Matrix::fastadd(P1, P5, result1);
         Matrix::fastadd(P6, P7, result2);
-        Matrix::fastsub(result1, result2, result3);
-        const Matrix& C22 = result3.copy();
+        Matrix::fastsub(result1, result2, C22);
 
         // combine
         return Matrix::combine(C11, C12, C21, C22);
