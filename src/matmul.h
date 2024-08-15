@@ -260,17 +260,13 @@ class Matrix {
 
     // ADDING MATRICES
 
-    static Matrix fastadd(const Matrix& curr, const Matrix& other) {
+    static void fastadd(const Matrix& curr, const Matrix& other, Matrix& result) {
         // removes checks and assume untranspose, to be used only in strassens
-        const size_t rows = curr.rows;
-        const size_t cols = curr.cols;
-        const size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        const size_t entries = curr.rows * curr.cols;
         for (size_t i = 0; i < entries; ++i) {
             // matrices guaranteed to not be transposed due to padding
-            new_mat[i] = curr.mat[i] + other.mat[i];
+            result.mat[i] = curr.mat[i] + other.mat[i];
         }
-        return Matrix(rows, cols, std::move(new_mat));
     }
 
     static Matrix add(const Matrix& matrix, const Matrix& other) {
@@ -315,16 +311,11 @@ class Matrix {
             });
     }
 
-    static Matrix fastsub(const Matrix& curr, const Matrix& other) {
-        const size_t rows = curr.rows;
-        const size_t cols = curr.cols;
-        const size_t entries = rows * cols;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
- 
+    static void fastsub(const Matrix& curr, const Matrix& other, Matrix& result) {
+        const size_t entries = curr.rows * curr.cols;
         for (size_t i = 0; i < entries; ++i) {
-            new_mat[i] = curr.mat[i] - other.mat[i];
+            result.mat[i] = curr.mat[i] - other.mat[i];
         }
-        return Matrix(rows, cols, std::move(new_mat));
     }
 
     // SUBBING NUMBERS
@@ -510,40 +501,73 @@ class Matrix {
 
         Matrix P1, P2, P3, P4, P5, P6, P7;
 
+        size_t halved_dim = a_padded.rows > 1;
+
+        Matrix result1(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result2(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result3(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result4(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result5(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result6(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result7(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result8(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result9(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+        Matrix result10(halved_dim, halved_dim, std::make_unique<double[]>(halved_dim * halved_dim));
+
         #pragma omp parallel
         {
             #pragma omp single
             {
                 #pragma omp task shared(P1)
-                P1 = Matrix::strassen(Matrix::fastadd(A, D), Matrix::fastadd(E, H));
+                Matrix::fastadd(A, D, result1);
+                Matrix::fastadd(E, H, result2);
+                P1 = Matrix::strassen(result1.copy(), result2.copy());
 
                 #pragma omp task shared(P2)
-                P2 = Matrix::strassen(D, Matrix::fastsub(G, E));
+                Matrix::fastsub(G, E, result3);
+                P2 = Matrix::strassen(D, result3.copy());
 
                 #pragma omp task shared(P3) 
-                P3 = Matrix::strassen(Matrix::fastadd(A, B), H);
+                Matrix::fastadd(A, B, result4);
+                P3 = Matrix::strassen(result4.copy(), H);
 
                 #pragma omp task shared(P4)
-                P4 = Matrix::strassen(Matrix::fastsub(B, D), Matrix::fastadd(G, H));
+                Matrix::fastsub(B, D, result5);
+                Matrix::fastadd(G, H, result6);
+                P4 = Matrix::strassen(result5.copy(), result6.copy());
 
                 #pragma omp task shared(P5) 
-                P5 = Matrix::strassen(A, Matrix::fastsub(F, H));
+                Matrix::fastsub(F, H, result7);
+                P5 = Matrix::strassen(A, result7.copy());
 
                 #pragma omp task shared(P6)
-                P6 = Matrix::strassen(Matrix::fastadd(C, D), E);
+                Matrix::fastadd(C, D, result8);
+                P6 = Matrix::strassen(result8.copy(), E);
 
                 #pragma omp task shared(P7)
-                P7 = Matrix::strassen(Matrix::fastsub(A, C), Matrix::fastadd(E, F));
+                Matrix::fastsub(A, C, result9);
+                Matrix::fastadd(E, F, result10);
+                P7 = Matrix::strassen(result9.copy(), result10.copy());
+                
                 #pragma omp taskwait
             }
             
         }
+        Matrix::fastadd(P1, P2, result1);
+        Matrix::fastsub(P4, P3, result2);
+        Matrix::fastadd(result1, result2, result3);
+        const Matrix& C11 = result3.copy();
+        
+        Matrix::fastadd(P5, P3, result3);
+        const Matrix& C12 = result3.copy();
 
-        const Matrix& C11 = Matrix::fastadd(Matrix::fastadd(P1, P2), Matrix::fastsub(P4, P3));
-        const Matrix& C12 = Matrix::fastadd(P5, P3);
-        const Matrix& C21 = Matrix::fastadd(P2, P6);
-        const Matrix& C22 = Matrix::fastsub(Matrix::fastadd(P1, P5), Matrix::fastadd(P6, P7));
+        Matrix::fastadd(P2, P6, result3);
+        const Matrix& C21 = result3.copy();
 
+        Matrix::fastadd(P1, P5, result1);
+        Matrix::fastadd(P6, P7, result2);
+        Matrix::fastsub(result1, result2, result3);
+        const Matrix& C22 = result3.copy();
 
         // combine
         return Matrix::combine(C11, C12, C21, C22);
