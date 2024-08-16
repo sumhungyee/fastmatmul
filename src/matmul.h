@@ -504,9 +504,12 @@ class Matrix {
 
         Matrix result1(halved_dim, halved_dim);
         Matrix result2(halved_dim, halved_dim);
-
+        Matrix result3(halved_dim, halved_dim);
+        Matrix result4(halved_dim, halved_dim);
         Matrix result5(halved_dim, halved_dim);
         Matrix result6(halved_dim, halved_dim);
+        Matrix result7(halved_dim, halved_dim);
+        Matrix result8(halved_dim, halved_dim);
         Matrix result9(halved_dim, halved_dim);
         Matrix result10(halved_dim, halved_dim);
 
@@ -524,7 +527,6 @@ class Matrix {
 
                 #pragma omp task shared(P2)
                 {
-                    Matrix result3(halved_dim, halved_dim);
                     Matrix::fastsub(G, E, result3);
                     P2 = Matrix::strassen(D, result3);
                 }
@@ -532,7 +534,7 @@ class Matrix {
 
                 #pragma omp task shared(P3) 
                 {
-                    Matrix result4(halved_dim, halved_dim);
+                    
                     Matrix::fastadd(A, B, result4);
                     P3 = Matrix::strassen(result4, H);
                 }
@@ -549,14 +551,12 @@ class Matrix {
 
                 #pragma omp task shared(P5)
                 {
-                    Matrix result7(halved_dim, halved_dim);
                     Matrix::fastsub(F, H, result7);
                     P5 = Matrix::strassen(A, result7);
                 }
 
                 #pragma omp task shared(P6)
                 {
-                    Matrix result8(halved_dim, halved_dim);
                     Matrix::fastadd(C, D, result8);
                     P6 = Matrix::strassen(result8, E);
                 }
