@@ -22,7 +22,7 @@ using namespace std;
 
 class Matrix {
     private:
-        std::unique_ptr<double[]> mat;
+        std::shared_ptr<double[]> mat;
         bool data_is_transposed = false;
 
         bool is_transposed() const {
@@ -74,10 +74,10 @@ class Matrix {
         if (rows <= 0 || cols <= 0) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
-        mat = std::make_unique<double[]>(rows * cols);
+        mat = std::make_shared<double[]>(rows * cols);
     }
 
-    Matrix(const size_t rows, const size_t cols, std::unique_ptr<double[]> mat) : rows(rows), cols(cols), mat(std::move(mat)) {
+    Matrix(const size_t rows, const size_t cols, std::shared_ptr<double[]> mat) : rows(rows), cols(cols), mat(std::move(mat)) {
         if (rows <= 0 || cols <= 0) {
             throw std::out_of_range("Matrix dimensions must be positive");
         }
@@ -85,7 +85,7 @@ class Matrix {
 
     // copy constructor
     Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
-        mat = std::make_unique<double[]>(rows * cols);
+        mat = std::make_shared<double[]>(rows * cols);
 
         //#pragma omp parallel for
         for (long i = 0; i < rows * cols; ++i) mat[i] = other.mat[i];
@@ -99,7 +99,7 @@ class Matrix {
     static Matrix identity(size_t mat_size) {
         size_t row = mat_size, col = mat_size;
         size_t entries = row * col;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        std::shared_ptr<double[]> new_mat = std::make_shared<double[]>(entries);
 
         #pragma omp parallel for shared(new_mat)
         for (long i = 0; i < row; ++i) {
@@ -117,7 +117,7 @@ class Matrix {
 
     static Matrix zeroes(size_t row, size_t col) {
         size_t entries = row * col;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        std::shared_ptr<double[]> new_mat = std::make_shared<double[]>(entries);
 
         #pragma omp parallel for
         for (long i = 0; i < entries; ++i) {
@@ -138,7 +138,7 @@ class Matrix {
             this->rows = other.rows;
             this->cols = other.cols;
             this->data_is_transposed = other.is_transposed();
-            this->mat = std::make_unique<double[]>(other.rows * other.cols);
+            this->mat = std::make_shared<double[]>(other.rows * other.cols);
             for (size_t i = 0; i < rows * cols; ++i) this->mat[i] = other.mat[i];
             return *this;
         }
@@ -233,7 +233,7 @@ class Matrix {
     static Matrix apply_all_entries_mat(const Matrix& curr, const Matrix& other, std::function<double(double, double)> op) {
         if (curr.rows == other.rows && curr.cols == other.cols) {
             size_t entries = curr.rows * curr.cols;
-            unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+            std::shared_ptr<double[]> new_mat = std::make_shared<double[]>(entries);
             
             for (long i = 0; i < curr.rows; ++i) {
                 for (long j = 0; j < curr.cols; ++j) {
@@ -248,7 +248,7 @@ class Matrix {
 
     static Matrix apply_all_entries_num(const Matrix& curr, const double num, std::function<double(double, double)> op) {
         size_t entries = curr.rows * curr.cols;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        std::shared_ptr<double[]> new_mat = std::make_shared<double[]>(entries);
 
         for (long i = 0; i < curr.rows; ++i) {
             for (long j = 0; j < curr.cols; ++j) {
@@ -387,7 +387,7 @@ class Matrix {
         const size_t new_rows = this->rows;
         const size_t new_cols = other.cols;
         const size_t entries = new_rows * new_cols;
-        unique_ptr<double[]> new_mat = std::make_unique<double[]>(entries);
+        std::shared_ptr<double[]> new_mat = std::make_shared<double[]>(entries);
 
 
         for (long i = 0; i < new_rows; ++i) {
@@ -427,10 +427,10 @@ class Matrix {
         // padded is guaranteed to be untransposed
         size_t length = padded.rows >> 1; // 2 * length == this->cols;
         size_t dims = length * length;
-        unique_ptr<double[]> mat_1 = std::make_unique<double[]>(dims);
-        unique_ptr<double[]> mat_2 = std::make_unique<double[]>(dims);
-        unique_ptr<double[]> mat_3 = std::make_unique<double[]>(dims);
-        unique_ptr<double[]> mat_4 = std::make_unique<double[]>(dims);
+        std::shared_ptr<double[]> mat_1 = std::make_shared<double[]>(dims);
+        std::shared_ptr<double[]> mat_2 = std::make_shared<double[]>(dims);
+        std::shared_ptr<double[]> mat_3 = std::make_shared<double[]>(dims);
+        std::shared_ptr<double[]> mat_4 = std::make_shared<double[]>(dims);
 
         size_t location, value1, value2;
         for (long i = 0; i < length; ++i) {
@@ -459,7 +459,7 @@ class Matrix {
         // number of rows must all be the same
         const size_t length = C11.rows; // desired length is twice of that
         const size_t desired = 2 * length;
-        unique_ptr<double[]> combined = std::make_unique<double[]>(desired * desired);
+        std::shared_ptr<double[]> combined = std::make_shared<double[]>(desired * desired);
 
         // again, guaranteed untransposed
         // return mat[r * cols + c];
@@ -620,7 +620,7 @@ class Matrix {
             
             Matrix padded_result = strassen(this_padded, other_padded, result>>1);
             //remove padding
-            unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
+            std::shared_ptr<double[]> unpadded = std::make_shared<double[]>(this->rows * other.cols);
             
             #pragma omp parallel for
             for (long e = 0; e < this->rows * other.cols; ++e) {
