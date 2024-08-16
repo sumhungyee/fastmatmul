@@ -406,9 +406,8 @@ class Matrix {
 
     // instead of padding to the smallest power of 2 greater than length
     // pad to 2^n * m where m <= LARGEMATRIXFORSTRASSEN
-    Matrix pad_matrix_to_2n(size_t length) const {
+    Matrix pad_matrix(size_t result) const {
         // length is greater than this->cols and this->rows
-        size_t result = Matrix::get_2n(length);
         Matrix padded = Matrix::zeroes(result, result);
 
         #pragma omp parallel for
@@ -608,8 +607,9 @@ class Matrix {
         } else {
             // pad both then mult
             size_t length = std::max(std::max(this->cols, this->rows), other.cols);
-            const Matrix this_padded = this->pad_matrix_to_2n(length);
-            const Matrix other_padded = other.pad_matrix_to_2n(length);
+            size_t result = Matrix::get_2n(length);
+            const Matrix this_padded = this->pad_matrix(result);
+            const Matrix other_padded = other.pad_matrix(result);
             Matrix padded_result = strassen(this_padded, other_padded);
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
