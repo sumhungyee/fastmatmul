@@ -479,7 +479,7 @@ class Matrix {
         return Matrix(desired, desired, std::move(combined));
     }
     // static method, must be padded
-    static Matrix strassen(const Matrix& a_padded, const Matrix& b_padded) {
+    static Matrix strassen(const Matrix& a_padded, const Matrix& b_padded, size_t halved_dim) {
         // this function was changed to reduce copies made. instead, fast_add and
         // fast_sub now take in a scratch matrix which can be edited.
         if (a_padded.rows < LARGEMATRIXFORSTRASSEN) {
@@ -500,8 +500,6 @@ class Matrix {
 
         Matrix P1, P2, P3, P4, P5, P6, P7;
 
-        size_t halved_dim = a_padded.rows >> 1;
-
         Matrix result1(halved_dim, halved_dim);
         Matrix result2(halved_dim, halved_dim);
         Matrix result3(halved_dim, halved_dim);
@@ -521,14 +519,14 @@ class Matrix {
                 {
                     Matrix::fastadd(A, D, result1);
                     Matrix::fastadd(E, H, result2);
-                    P1 = Matrix::strassen(result1, result2);
+                    P1 = Matrix::strassen(result1, result2, halved_dim>>1);
                 }
                 
 
                 #pragma omp task shared(P2)
                 {
                     Matrix::fastsub(G, E, result3);
-                    P2 = Matrix::strassen(D, result3);
+                    P2 = Matrix::strassen(D, result3, halved_dim>>1);
                 }
                 
 
@@ -536,7 +534,7 @@ class Matrix {
                 {
                     
                     Matrix::fastadd(A, B, result4);
-                    P3 = Matrix::strassen(result4, H);
+                    P3 = Matrix::strassen(result4, H, halved_dim>>1);
                 }
                 
 
@@ -545,20 +543,20 @@ class Matrix {
                     
                     Matrix::fastsub(B, D, result5);
                     Matrix::fastadd(G, H, result6);
-                    P4 = Matrix::strassen(result5, result6);
+                    P4 = Matrix::strassen(result5, result6, halved_dim>>1);
                 }
                 
 
                 #pragma omp task shared(P5)
                 {
                     Matrix::fastsub(F, H, result7);
-                    P5 = Matrix::strassen(A, result7);
+                    P5 = Matrix::strassen(A, result7, halved_dim>>1);
                 }
 
                 #pragma omp task shared(P6)
                 {
                     Matrix::fastadd(C, D, result8);
-                    P6 = Matrix::strassen(result8, E);
+                    P6 = Matrix::strassen(result8, E, halved_dim>>1);
                 }
                 
 
@@ -566,7 +564,7 @@ class Matrix {
                 {
                     Matrix::fastsub(A, C, result9);
                     Matrix::fastadd(E, F, result10);
-                    P7 = Matrix::strassen(result9, result10);
+                    P7 = Matrix::strassen(result9, result10, halved_dim>>1);
                 }
                 
                 #pragma omp taskwait
@@ -610,7 +608,7 @@ class Matrix {
             size_t result = Matrix::get_2n(length);
             const Matrix this_padded = this->pad_matrix(result);
             const Matrix other_padded = other.pad_matrix(result);
-            Matrix padded_result = strassen(this_padded, other_padded);
+            Matrix padded_result = strassen(this_padded, other_padded, result>>1);
             //remove padding
             unique_ptr<double[]> unpadded = std::make_unique<double[]>(this->rows * other.cols);
             
